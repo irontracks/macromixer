@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacroMixer - MK Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #111827; /* Dark theme base */
+            color: #e5e7eb;
+        }
+        .glass-panel {
+            background: rgba(31, 41, 55, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 85, 99, 0.4);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        .progress-bar {
+            transition: width 1s ease-in-out;
+        }
+        
+        /* Animation for login button */
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+        }
+        .btn-pulse {
+            animation: pulse-border 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-10">
+
+    <!-- Navbar -->
+    <nav class="w-full bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-record-vinyl text-purple-500 text-xl"></i>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">MacroMixer</h1>
+            </div>
+            <div id="auth-container" class="text-xs">
+                 <button id="btn-login" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1 rounded border border-gray-600 transition-colors flex items-center gap-2">
+                    <i class="fa-brands fa-google"></i> Entrar
+                </button>
+                <div id="user-status" class="hidden text-gray-500 flex items-center gap-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full" id="connection-dot"></div>
+                    <span id="username-display">Online</span>
+                    <button id="btn-logout" class="ml-2 text-gray-400 hover:text-white"><i class="fa-solid fa-sign-out-alt"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-md px-4 mt-6 space-y-6">
+
+        <!-- Goals Section (Collapsible) -->
+        <section id="goals-section" class="glass-panel rounded-xl p-4 shadow-lg hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-white"><i class="fa-solid fa-sliders mr-2"></i>Definir Metas</h2>
+                <button id="close-goals-btn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="goals-form" class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-gray-400">Calorias (kcal)</label>
+                        <input type="number" id="goal-cals" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white focus:border-purple-500 outline-none" placeholder="Ex: 2500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Proteína (g)</label>
+                        <input type="number" id="goal-prot" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white focus:border-green-500 outline-none" placeholder="Ex: 180">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Carboidrato (g)</label>
+                        <input type="number" id="goal-carb" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white focus:border-blue-500 outline-none" placeholder="Ex: 300">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Gordura (g)</label>
+                        <input type="number" id="goal-fat" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white focus:border-yellow-500 outline-none" placeholder="Ex: 80">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded transition-all">Salvar Metas</button>
+            </form>
+        </section>
+
+        <!-- Dashboard / Equalizer -->
+        <section class="glass-panel rounded-xl p-5 shadow-xl relative">
+             <button id="edit-goals-btn" class="absolute top-3 right-3 text-gray-500 hover:text-purple-400 text-xs uppercase font-bold tracking-wider">
+                <i class="fa-solid fa-gear mr-1"></i> Config
+            </button>
+            
+            <h2 class="text-gray-400 text-xs uppercase font-bold tracking-widest mb-4">Equalizador Diário</h2>
+
+            <!-- Calories Main -->
+            <div class="mb-6 text-center">
+                <div class="text-3xl font-bold text-white mb-1"><span id="display-cals">0</span> <span class="text-sm text-gray-500 font-normal">/ <span id="target-cals">0</span> kcal</span></div>
+                <div class="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+                    <div id="bar-cals" class="bg-gradient-to-r from-purple-500 to-pink-600 h-3 rounded-full progress-bar" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-xs mt-1 text-gray-500">
+                    <span>Consumido</span>
+                    <span id="saldo-cals">Saldo: 0</span>
+                </div>
+            </div>
+
+            <!-- Macros Grid -->
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <!-- Protein -->
+                <div>
+                    <div class="text-xs text-gray-400 mb-1">Proteína</div>
+                    <div class="w-full bg-gray-800 rounded-full h-24 relative mx-auto w-4 overflow-hidden flex flex-col justify-end group">
+                        <div id="bar-prot" class="bg-green-500 w-full progress-bar opacity-80 group-hover:opacity-100" style="height: 0%"></div>
+                    </div>
+                    <div class="text-sm font-bold mt-2 text-green-400"><span id="display-prot">0</span>g</div>
+                    <div class="text-xs text-gray-600">/<span id="target-prot">0</span></div>
+                </div>
+                <!-- Carbs -->
+                <div>
+                    <div class="text-xs text-gray-400 mb-1">Carbo</div>
+                    <div class="w-full bg-gray-800 rounded-full h-24 relative mx-auto w-4 overflow-hidden flex flex-col justify-end group">
+                        <div id="bar-carb" class="bg-blue-500 w-full progress-bar opacity-80 group-hover:opacity-100" style="height: 0%"></div>
+                    </div>
+                    <div class="text-sm font-bold mt-2 text-blue-400"><span id="display-carb">0</span>g</div>
+                    <div class="text-xs text-gray-600">/<span id="target-carb">0</span></div>
+                </div>
+                <!-- Fat -->
+                <div>
+                    <div class="text-xs text-gray-400 mb-1">Gordura</div>
+                    <div class="w-full bg-gray-800 rounded-full h-24 relative mx-auto w-4 overflow-hidden flex flex-col justify-end group">
+                        <div id="bar-fat" class="bg-yellow-500 w-full progress-bar opacity-80 group-hover:opacity-100" style="height: 0%"></div>
+                    </div>
+                    <div class="text-sm font-bold mt-2 text-yellow-400"><span id="display-fat">0</span>g</div>
+                    <div class="text-xs text-gray-600">/<span id="target-fat">0</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Suggestion Box (Dynamic) -->
+        <div id="suggestion-box" class="hidden bg-gray-800/50 border-l-4 border-purple-500 p-3 rounded text-sm text-gray-300">
+            <i class="fa-solid fa-robot mr-2 text-purple-400"></i> <span id="suggestion-text">Analisando...</span>
+        </div>
+
+        <!-- Input Section -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg">
+            <h2 class="text-gray-400 text-xs uppercase font-bold tracking-widest mb-3">Input de Refeição</h2>
+            <div class="relative">
+                <textarea id="meal-input" rows="4" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all resize-none" placeholder="Ex:&#10;Almoço&#10;Arroz 200g&#10;Feijão 100g&#10;Frango 150g"></textarea>
+                <div class="absolute bottom-3 right-3">
+                    <button id="btn-calculate" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white p-3 rounded-full shadow-lg transform hover:scale-105 transition-all w-12 h-12 flex items-center justify-center">
+                        <i class="fa-solid fa-calculator"></i>
+                    </button>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2 ml-1"><i class="fa-solid fa-circle-info mr-1"></i> Digite o nome do alimento e o peso.</p>
+        </section>
+
+        <!-- Daily Log -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg pb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-gray-400 text-xs uppercase font-bold tracking-widest">Histórico de Hoje</h2>
+                <button id="reset-day-btn" class="text-xs text-red-400 hover:text-red-300"><i class="fa-solid fa-trash mr-1"></i>Limpar Dia</button>
+            </div>
+            
+            <div id="logs-container" class="space-y-3">
+                <!-- Logs will be injected here via JS -->
+                <div class="text-center text-gray-600 py-4 italic text-sm">Nenhuma refeição registrada hoje.</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal for Meal Details -->
+    <div id="modal-result" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-xl w-full max-w-sm border border-gray-700 shadow-2xl overflow-hidden">
+            <div class="bg-gray-900 p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="font-bold text-white"><i class="fa-solid fa-check-circle text-green-500 mr-2"></i>Refeição Processada</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="p-4 max-h-[60vh] overflow-y-auto" id="modal-content">
+                <!-- Dynamic Content -->
+            </div>
+            <div class="p-4 bg-gray-900 border-t border-gray-700">
+                <button id="confirm-meal" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-all">
+                    Registrar Refeição
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- DATABASE DE ALIMENTOS (MACROS POR 100G) ---
+        const foodDatabase = {
+            "arroz": { c: 28, p: 2.5, f: 0.2, kcal: 130, unit: "Arroz Branco Cozido" },
+            "arroz integral": { c: 26, p: 2.6, f: 1, kcal: 124, unit: "Arroz Integral" },
+            "feijao": { c: 14, p: 5, f: 0.5, kcal: 76, unit: "Feijão Carioca Cozido" },
+            "feijão": { c: 14, p: 5, f: 0.5, kcal: 76, unit: "Feijão Carioca Cozido" },
+            "frango": { c: 0, p: 31, f: 3.6, kcal: 165, unit: "Peito de Frango Grelhado" },
+            "peito de frango": { c: 0, p: 31, f: 3.6, kcal: 165, unit: "Peito de Frango Grelhado" },
+            "carne": { c: 0, p: 26, f: 8, kcal: 180, unit: "Patinho Moído" },
+            "patinho": { c: 0, p: 26, f: 8, kcal: 180, unit: "Patinho Moído" },
+            "ovo": { c: 0.6, p: 6, f: 5, kcal: 70, unit: "Ovo Inteiro (unidade - aprox 50g)" },
+            "claras": { c: 0, p: 13, f: 0, kcal: 54, unit: "Clara de Ovo" },
+            "aveia": { c: 57, p: 14, f: 6, kcal: 389, unit: "Aveia em Flocos" },
+            "banana": { c: 23, p: 1, f: 0.3, kcal: 89, unit: "Banana Prata" },
+            "batata": { c: 17, p: 2, f: 0, kcal: 77, unit: "Batata Inglesa Cozida" },
+            "batata doce": { c: 20, p: 1.6, f: 0.5, kcal: 86, unit: "Batata Doce Cozida" },
+            "whey": { c: 3, p: 24, f: 1, kcal: 120, unit: "Whey Protein (30g dose padrão)" },
+            "monster": { c: 2, p: 0, f: 0, kcal: 10, unit: "Monster Zero (Lata)" },
+            "monster zero": { c: 2, p: 0, f: 0, kcal: 10, unit: "Monster Zero (Lata)" },
+            "pao": { c: 49, p: 9, f: 3, kcal: 265, unit: "Pão Francês" },
+            "pão": { c: 49, p: 9, f: 3, kcal: 265, unit: "Pão Francês" },
+            "tapio": { c: 60, p: 0, f: 0, kcal: 240, unit: "Goma de Tapioca" },
+            "azeite": { c: 0, p: 0, f: 100, kcal: 884, unit: "Azeite de Oliva" },
+            "abacate": { c: 9, p: 2, f: 15, kcal: 160, unit: "Abacate" },
+            "macarrao": { c: 30, p: 5, f: 1, kcal: 157, unit: "Macarrão Cozido" },
+            "macarrão": { c: 30, p: 5, f: 1, kcal: 157, unit: "Macarrão Cozido" },
+            "tilapia": { c: 0, p: 26, f: 1.7, kcal: 128, unit: "Tilápia Grelhada" },
+            "tilápia": { c: 0, p: 26, f: 1.7, kcal: 128, unit: "Tilápia Grelhada" },
+            "queijo": { c: 2, p: 25, f: 30, kcal: 400, unit: "Queijo Mussarela" }
+        };
+
+        // --- FIREBASE CONFIGURATION STRATEGY ---
+        let firebaseConfig;
+        let appId = 'default-app-id';
+
+        // Check if we are in the preview environment (which provides __firebase_config)
+        // If yes, we use it to guarantee the preview works.
+        // If not, we fall back to YOUR custom config for production/deployment.
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+            if (typeof __app_id !== 'undefined') appId = __app_id;
+        } else {
+            // YOUR CONFIG (MK - IronTracks)
+            firebaseConfig = {
+                apiKey: "AIzaSyBfy01I69nNCABxnYSqK95e8TwGP1bSv2w",
+                authDomain: "irontracks-e6344.firebaseapp.com",
+                projectId: "irontracks-e6344",
+                storageBucket: "irontracks-e6344.firebasestorage.app",
+                messagingSenderId: "212508580918",
+                appId: "1:212508580918:web:dd55c3088fec86b8680c97"
+            };
+            appId = "irontracks-prod"; // Identifier for your production path
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userSettings = { cals: 2500, prot: 180, carb: 300, fat: 80 };
+        let dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+        let tempMealAnalysis = null;
+        let unsubscribeSettings = null;
+        let unsubscribeLogs = null;
+
+        // --- AUTH LOGIC ---
+        
+        const googleProvider = new GoogleAuthProvider();
+
+        const handleLogin = async () => {
+            try {
+                await signInWithPopup(auth, googleProvider);
+            } catch (error) {
+                console.error("Login Error:", error);
+                // Handle domain mismatch in preview
+                if(error.code === 'auth/unauthorized-domain') {
+                    alert("Aviso: O Google Login pode não funcionar neste preview se o domínio não estiver autorizado no seu Firebase Console. Em produção funcionará.");
+                } else {
+                    alert("Erro no login: " + error.message);
+                }
+            }
+        };
+
+        const handleLogout = async () => {
+            try {
+                await signOut(auth);
+                // Reset state on logout
+                resetUIState();
+            } catch (error) {
+                console.error("Logout Error:", error);
+            }
+        };
+
+        const initAuth = async () => {
+            // Only force anonymous sign-in if we are in the Preview Environment and no user is signed in
+            // This prevents "popup blocked" issues in some previewers if we try to auto-popup
+            if (typeof __firebase_config !== 'undefined' && !auth.currentUser) {
+                 try {
+                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        // In preview, we default to anonymous for ease of testing
+                        // If user clicks "Login", it will upgrade/switch to Google
+                         await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Preview Auth error:", error);
+                }
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                
+                // UI Updates for logged in state
+                document.getElementById('btn-login').classList.add('hidden');
+                document.getElementById('user-status').classList.remove('hidden');
+                document.getElementById('user-status').classList.add('flex');
+                
+                // Show name if available (Google), else show "Visitante" or ID
+                const displayName = user.displayName || "Visitante (MK)";
+                document.getElementById('username-display').innerText = displayName;
+
+                // Load data
+                loadUserSettings();
+                loadDailyLog();
+            } else {
+                currentUser = null;
+                // UI Updates for logged out state
+                document.getElementById('btn-login').classList.remove('hidden');
+                document.getElementById('user-status').classList.add('hidden');
+                document.getElementById('user-status').classList.remove('flex');
+                resetUIState();
+            }
+        });
+
+        // Initialize (Auto-login anonymous for preview compatibility)
+        initAuth();
+
+        // --- DATABASE OPERATIONS ---
+        
+        function resetUIState() {
+             userSettings = { cals: 2500, prot: 180, carb: 300, fat: 80 };
+             dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+             updateUIInputs();
+             updateDashboard();
+             renderLogs();
+             if(unsubscribeSettings) unsubscribeSettings();
+             if(unsubscribeLogs) unsubscribeLogs();
+        }
+
+        async function loadUserSettings() {
+            if (!currentUser) return;
+            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'goals');
+            
+            unsubscribeSettings = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    userSettings = docSnap.data();
+                    updateUIInputs();
+                    updateDashboard();
+                    document.getElementById('goals-section').classList.add('hidden');
+                } else {
+                    document.getElementById('goals-section').classList.remove('hidden');
+                }
+            }, (error) => console.log("Error loading settings", error));
+        }
+
+        async function saveUserSettings(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const newSettings = {
+                cals: Number(document.getElementById('goal-cals').value),
+                prot: Number(document.getElementById('goal-prot').value),
+                carb: Number(document.getElementById('goal-carb').value),
+                fat: Number(document.getElementById('goal-fat').value)
+            };
+
+            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'goals');
+            await setDoc(docRef, newSettings);
+            
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "Salvo!";
+            btn.classList.add('bg-green-600');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('bg-green-600');
+                document.getElementById('goals-section').classList.add('hidden');
+            }, 1000);
+        }
+
+        async function loadDailyLog() {
+            if (!currentUser) return;
+            const todayStr = new Date().toISOString().split('T')[0];
+            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_logs', todayStr);
+
+            unsubscribeLogs = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    dailyLog = docSnap.data();
+                    if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+                } else {
+                    dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+                }
+                renderLogs();
+                updateDashboard();
+                analyzeContext();
+            }, (error) => console.log("Error loading logs", error));
+        }
+
+        async function pushMealToDB() {
+            if (!currentUser || !tempMealAnalysis) return;
+            const todayStr = new Date().toISOString().split('T')[0];
+            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_logs', todayStr);
+
+            const newTotal = {
+                cals: dailyLog.total.cals + tempMealAnalysis.totals.kcal,
+                prot: dailyLog.total.prot + tempMealAnalysis.totals.p,
+                carb: dailyLog.total.carb + tempMealAnalysis.totals.c,
+                fat: dailyLog.total.fat + tempMealAnalysis.totals.f
+            };
+
+            const mealEntry = {
+                name: tempMealAnalysis.mealName || "Refeição",
+                timestamp: new Date().toISOString(),
+                foods: tempMealAnalysis.foods,
+                totals: tempMealAnalysis.totals
+            };
+
+            try {
+                if (dailyLog.items.length === 0) {
+                    await setDoc(docRef, { items: [mealEntry], total: newTotal });
+                } else {
+                    await updateDoc(docRef, { items: arrayUnion(mealEntry), total: newTotal });
+                }
+                document.getElementById('meal-input').value = "";
+                document.getElementById('modal-result').classList.add('hidden');
+            } catch (err) {
+                console.error("Error saving meal:", err);
+                alert("Erro ao salvar. Verifique sua conexão.");
+            }
+        }
+        
+        async function resetDay() {
+            if (!currentUser) return;
+            if(!confirm("Tem certeza que quer apagar tudo de hoje?")) return;
+            const todayStr = new Date().toISOString().split('T')[0];
+            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_logs', todayStr);
+            await setDoc(docRef, { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }});
+        }
+
+        // --- CORE PARSER & UI LOGIC (UNCHANGED) ---
+
+        function parseInput(text) {
+            const lines = text.split('\n');
+            const detectedFoods = [];
+            let mealName = "Refeição Rápida";
+            let totals = { p:0, c:0, f:0, kcal:0 };
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                if (!line) return;
+                if (index === 0 && !/\d/.test(line)) {
+                    mealName = line;
+                    return;
+                }
+                let qtd = 0;
+                let foodName = "";
+                const quantityMatch = line.match(/(\d+)([gG]|[mM][lL])?/);
+                if (quantityMatch) {
+                    qtd = parseInt(quantityMatch[1]);
+                    foodName = line.replace(quantityMatch[0], "").replace(" de ", " ").trim().toLowerCase();
+                } else {
+                     foodName = line.toLowerCase();
+                     if(foodName.includes('ovo') || foodName.includes('monster')) qtd = 1; 
+                }
+                let dbItem = null;
+                let dbKeyMatched = "";
+                for (const key in foodDatabase) {
+                    if (foodName.includes(key)) {
+                        if (!dbKeyMatched || key.length > dbKeyMatched.length) {
+                            dbKeyMatched = key;
+                            dbItem = foodDatabase[key];
+                        }
+                    }
+                }
+                if (dbItem) {
+                    let multiplier = qtd / 100;
+                    if (dbItem.unit.includes("Lata") || dbItem.unit.includes("unidade")) multiplier = qtd;
+                    const p = Math.round(dbItem.p * multiplier);
+                    const c = Math.round(dbItem.c * multiplier);
+                    const f = Math.round(dbItem.f * multiplier);
+                    const kcal = Math.round(dbItem.kcal * multiplier);
+                    totals.p += p; totals.c += c; totals.f += f; totals.kcal += kcal;
+                    detectedFoods.push({ name: dbItem.unit, rawName: foodName, qtd: qtd, macros: { p, c, f, kcal } });
+                } else {
+                     detectedFoods.push({ name: "Desconhecido (" + line + ")", rawName: line, qtd: 0, macros: { p:0, c:0, f:0, kcal:0 }, error: true });
+                }
+            });
+            return { mealName, foods: detectedFoods, totals };
+        }
+
+        function handleCalculate() {
+            const text = document.getElementById('meal-input').value;
+            if (!text.trim()) return;
+            tempMealAnalysis = parseInput(text);
+            const container = document.getElementById('modal-content');
+            container.innerHTML = '';
+            const header = document.createElement('div');
+            header.className = "bg-gray-800 rounded p-3 mb-4 text-center border border-gray-700";
+            header.innerHTML = `
+                <div class="text-xl font-bold text-white">${tempMealAnalysis.mealName}</div>
+                <div class="flex justify-center gap-4 mt-2 text-sm">
+                    <span class="text-purple-400 font-bold">${tempMealAnalysis.totals.kcal} kcal</span>
+                    <span class="text-green-400">P: ${tempMealAnalysis.totals.p}g</span>
+                    <span class="text-blue-400">C: ${tempMealAnalysis.totals.c}g</span>
+                    <span class="text-yellow-400">G: ${tempMealAnalysis.totals.f}g</span>
+                </div>
+            `;
+            container.appendChild(header);
+            tempMealAnalysis.foods.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center py-2 border-b border-gray-700 last:border-0";
+                if (item.error) {
+                    row.innerHTML = `<div class="text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>${item.rawName} <span class="text-xs opacity-70">(Não encontrado)</span></div>`;
+                } else {
+                    row.innerHTML = `
+                        <div>
+                            <div class="text-gray-200 font-medium">${item.name}</div>
+                            <div class="text-xs text-gray-500">${item.qtd}${item.name.includes('Lata') || item.name.includes('unidade') ? 'un' : 'g'}</div>
+                        </div>
+                        <div class="text-right text-xs text-gray-400">
+                            <div>${item.macros.kcal} kcal</div>
+                            <div class="flex gap-1"><span class="text-green-600">P:${item.macros.p}</span><span class="text-blue-600">C:${item.macros.c}</span><span class="text-yellow-600">G:${item.macros.f}</span></div>
+                        </div>`;
+                }
+                container.appendChild(row);
+            });
+            document.getElementById('modal-result').classList.remove('hidden');
+        }
+
+        function updateUIInputs() {
+            document.getElementById('goal-cals').value = userSettings.cals;
+            document.getElementById('goal-prot').value = userSettings.prot;
+            document.getElementById('goal-carb').value = userSettings.carb;
+            document.getElementById('goal-fat').value = userSettings.fat;
+            document.getElementById('target-cals').innerText = userSettings.cals;
+            document.getElementById('target-prot').innerText = userSettings.prot;
+            document.getElementById('target-carb').innerText = userSettings.carb;
+            document.getElementById('target-fat').innerText = userSettings.fat;
+        }
+
+        function updateDashboard() {
+            const t = dailyLog.total;
+            const g = userSettings;
+            document.getElementById('display-cals').innerText = t.cals;
+            document.getElementById('display-prot').innerText = t.prot;
+            document.getElementById('display-carb').innerText = t.carb;
+            document.getElementById('display-fat').innerText = t.fat;
+            const balance = g.cals - t.cals;
+            const balEl = document.getElementById('saldo-cals');
+            balEl.innerText = `Saldo: ${balance}`;
+            balEl.className = balance < 0 ? 'text-red-500 font-bold' : 'text-gray-500';
+            setBar('bar-cals', t.cals, g.cals);
+            setBar('bar-prot', t.prot, g.prot);
+            setBar('bar-carb', t.carb, g.carb);
+            setBar('bar-fat', t.fat, g.fat);
+        }
+
+        function setBar(id, val, max) {
+            const pct = Math.min(100, Math.max(0, (val / max) * 100));
+            const el = document.getElementById(id);
+            if (id === 'bar-cals') el.style.width = `${pct}%`;
+            else el.style.height = `${pct}%`;
+            if (val > max) el.classList.add('bg-red-500'); else el.classList.remove('bg-red-500');
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('logs-container');
+            container.innerHTML = '';
+            if (!dailyLog.items || dailyLog.items.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-600 py-4 italic text-sm">Nenhuma refeição hoje.</div>';
+                return;
+            }
+            dailyLog.items.slice().reverse().forEach(log => {
+                const el = document.createElement('div');
+                el.className = 'bg-gray-800/50 rounded-lg p-3 border-l-2 border-purple-500 flex justify-between items-center';
+                const foodDesc = log.foods.map(f => f.name.split(' ')[0]).join(', ');
+                el.innerHTML = `
+                    <div><div class="text-sm font-bold text-gray-200">${log.name}</div><div class="text-xs text-gray-500 truncate w-40">${foodDesc}</div></div>
+                    <div class="text-right"><div class="text-sm font-bold text-white">${log.totals.kcal} kcal</div><div class="text-[10px] text-gray-400 flex gap-2"><span class="text-green-500">P:${log.totals.p}</span><span class="text-blue-500">C:${log.totals.c}</span><span class="text-yellow-500">G:${log.totals.f}</span></div></div>`;
+                container.appendChild(el);
+            });
+        }
+
+        function analyzeContext() {
+            const t = dailyLog.total;
+            const g = userSettings;
+            const box = document.getElementById('suggestion-box');
+            const txt = document.getElementById('suggestion-text');
+            box.classList.remove('hidden');
+            const pctKcal = t.cals / g.cals;
+            const pctProt = t.prot / g.prot;
+            if (pctKcal > 1) {
+                 txt.innerText = "Meta calórica atingida! Só água e descanso agora, mestre.";
+                 box.className = "bg-red-900/30 border-l-4 border-red-500 p-3 rounded text-sm text-red-200";
+            } else if (pctProt < 0.5 && pctKcal > 0.7) {
+                 txt.innerText = "Atenção nos graves (Proteína)! Foca em frango ou claras na próxima.";
+                 box.className = "bg-yellow-900/30 border-l-4 border-yellow-500 p-3 rounded text-sm text-yellow-200";
+            } else if (pctKcal < 0.2) {
+                 txt.innerText = "Dia começando. Bora bater essa meta sem medo!";
+                 box.className = "bg-purple-900/30 border-l-4 border-purple-500 p-3 rounded text-sm text-gray-300";
+            } else {
+                 const remainingCals = g.cals - t.cals;
+                 txt.innerText = `Você ainda tem ${remainingCals} kcal no buffer. Mantenha o ritmo.`;
+                 box.className = "bg-gray-800/50 border-l-4 border-green-500 p-3 rounded text-sm text-gray-300";
+            }
+        }
+
+        // --- EVENTS ---
+        document.getElementById('goals-form').addEventListener('submit', saveUserSettings);
+        document.getElementById('edit-goals-btn').addEventListener('click', () => document.getElementById('goals-section').classList.remove('hidden'));
+        document.getElementById('close-goals-btn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('goals-section').classList.add('hidden'); });
+        document.getElementById('btn-calculate').addEventListener('click', handleCalculate);
+        document.getElementById('close-modal').addEventListener('click', () => document.getElementById('modal-result').classList.add('hidden'));
+        document.getElementById('confirm-meal').addEventListener('click', pushMealToDB);
+        document.getElementById('reset-day-btn').addEventListener('click', resetDay);
+        document.getElementById('btn-login').addEventListener('click', handleLogin);
+        document.getElementById('btn-logout').addEventListener('click', handleLogout);
+
+    </script>
+</body>
+</html>
