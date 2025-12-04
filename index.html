@@ -46,13 +46,13 @@
                 <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.1</span></h1>
             </div>
             <div id="auth-container" class="text-xs">
-                 <button id="btn-login" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-600 transition-colors flex items-center gap-2">
-                    <i class="fa-brands fa-google"></i> Entrar
+                 <button id="btn-login" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-600 transition-colors flex items-center gap-2" title="Clique para usar o app (modo offline disponível)">
+                    <i class="fa-solid fa-rocket"></i> Começar
                 </button>
                 <div id="user-status" class="hidden text-gray-400 flex items-center gap-2">
                     <div class="w-2 h-2 bg-green-500 rounded-full" id="connection-dot"></div>
                     <span id="username-display">Online</span>
-                    <button id="btn-logout" class="ml-2 text-slate-500 hover:text-white"><i class="fa-solid fa-sign-out-alt"></i></button>
+                    <button id="btn-logout" class="ml-2 text-slate-500 hover:text-white" title="Sair"><i class="fa-solid fa-sign-out-alt"></i></button>
                 </div>
             </div>
         </div>
@@ -464,25 +464,80 @@
 
         // --- AUTH ---
         const googleProvider = new GoogleAuthProvider();
+        let useLocalStorage = false; // Modo offline
 
         const handleLogin = async () => {
-            try { await signInWithPopup(auth, googleProvider); } catch (error) { console.error(error); alert("Erro no login. Se estiver no preview, isso é normal."); }
+            try { 
+                await signInWithPopup(auth, googleProvider); 
+            } catch (error) { 
+                console.error(error); 
+                // Se falhar, oferece modo offline
+                if (confirm("Não foi possível conectar ao Google.\n\nDeseja usar o app em MODO OFFLINE?\n(Seus dados ficarão salvos apenas neste navegador)")) {
+                    enableOfflineMode();
+                }
+            }
         };
 
         const handleLogout = async () => {
-            try { await signOut(auth); } catch (error) { console.error(error); }
+            if (useLocalStorage) {
+                if (confirm("Deseja limpar todos os dados salvos localmente?")) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            } else {
+                try { await signOut(auth); } catch (error) { console.error(error); }
+            }
+        };
+
+        const enableOfflineMode = () => {
+            useLocalStorage = true;
+            localStorage.setItem('macromixer_offline_mode', 'true');
+            currentUser = { uid: 'local-user', displayName: 'Modo Offline' };
+            document.getElementById('btn-login').classList.add('hidden');
+            document.getElementById('user-status').classList.remove('hidden');
+            document.getElementById('user-status').classList.add('flex');
+            document.getElementById('username-display').innerText = "Modo Offline";
+            document.getElementById('connection-dot').classList.remove('bg-green-500');
+            document.getElementById('connection-dot').classList.add('bg-yellow-500');
+            
+            loadUserSettingsLocal();
+            loadDailyLogLocal();
+            loadNotificationSettingsLocal();
         };
 
         const initAuth = async () => {
-             if (typeof __firebase_config !== 'undefined' && !auth.currentUser) {
-                 try {
-                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (error) { console.error(error); }
+            // Verifica se já está em modo offline
+            if (localStorage.getItem('macromixer_offline_mode') === 'true') {
+                enableOfflineMode();
+                return;
             }
+            
+            // Detecta se está rodando localmente (file://)
+            const isLocalFile = window.location.protocol === 'file:';
+            
+            if (isLocalFile) {
+                // Modo offline automático para arquivos locais
+                console.log('Detectado arquivo local - ativando modo offline');
+                enableOfflineMode();
+                return;
+            }
+            
+            if (typeof __firebase_config !== 'undefined' && !auth.currentUser) {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                       await signInWithCustomToken(auth, __initial_auth_token);
+                   } else {
+                       await signInAnonymously(auth);
+                   }
+               } catch (error) { 
+                   console.error(error);
+                   // Auto-ativa modo offline se Firebase falhar
+                   enableOfflineMode();
+               }
+           } else if (!auth.currentUser) {
+               // Se não tem Firebase config, usa modo offline direto
+               enableOfflineMode();
+           }
         };
 
         onAuthStateChanged(auth, (user) => {
@@ -520,6 +575,100 @@
             
             alert(`Preset ${type === 'A' ? 'MASSACRE' : 'VÁCUO'} carregado. Clique em salvar.`);
         };
+
+        // --- LOCAL STORAGE FUNCTIONS ---
+        function saveToLocalStorage(key, data) {
+            localStorage.setItem(`macromixer_${key}`, JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage(key, defaultValue = null) {
+            const data = localStorage.getItem(`macromixer_${key}`);
+            return data ? JSON.parse(data) : defaultValue;
+        }
+
+        function loadUserSettingsLocal() {
+            const saved = loadFromLocalStorage('settings');
+            if (saved) {
+                userSettings = { ...userSettings, ...saved };
+                updateUIInputs();
+                updateDashboard();
+                document.getElementById('goals-section').classList.add('hidden');
+            } else {
+                document.getElementById('goals-section').classList.remove('hidden');
+            }
+        }
+
+        function saveUserSettingsLocal(newSettings) {
+            userSettings = newSettings;
+            saveToLocalStorage('settings', newSettings);
+            localStorage.setItem('macromixer_offline_mode', 'true');
+            updateUIInputs();
+            updateDashboard();
+        }
+
+        function loadDailyLogLocal() {
+            const dateStr = currentViewDate.toISOString().split('T')[0];
+            const saved = loadFromLocalStorage(`log_${dateStr}`);
+            if (saved) {
+                dailyLog = saved;
+                if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+            } else {
+                dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+            }
+            renderLogs();
+            updateDashboard();
+            
+            const today = new Date();
+            if (currentViewDate.toDateString() === today.toDateString()) {
+                analyzeContext();
+            }
+        }
+
+        function saveDailyLogLocal() {
+            const dateStr = currentViewDate.toISOString().split('T')[0];
+            saveToLocalStorage(`log_${dateStr}`, dailyLog);
+        }
+
+        async function loadWeeklyDataLocal() {
+            const weekData = [];
+            const today = new Date();
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const saved = loadFromLocalStorage(`log_${dateStr}`);
+                
+                if (saved) {
+                    weekData.push({
+                        date: dateStr,
+                        label: date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }),
+                        total: saved.total || { cals: 0, prot: 0, carb: 0, fat: 0 }
+                    });
+                } else {
+                    weekData.push({
+                        date: dateStr,
+                        label: date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }),
+                        total: { cals: 0, prot: 0, carb: 0, fat: 0 }
+                    });
+                }
+            }
+            
+            return weekData;
+        }
+
+        function loadNotificationSettingsLocal() {
+            const saved = loadFromLocalStorage('notifications');
+            if (saved) {
+                notificationSettings = saved;
+                updateNotificationUI();
+            }
+        }
+
+        function saveNotificationSettingsLocal(settings) {
+            notificationSettings = settings;
+            saveToLocalStorage('notifications', settings);
+        }
 
         // --- DATABASE OPS ---
         function resetUIState() {
@@ -563,8 +712,12 @@
                 fat: Number(document.getElementById('goal-fat').value)
             };
 
-            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'goals');
-            await setDoc(docRef, newSettings);
+            if (useLocalStorage) {
+                saveUserSettingsLocal(newSettings);
+            } else {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'goals');
+                await setDoc(docRef, newSettings);
+            }
             
             const btn = e.target.querySelector('button');
             const originalText = btn.innerText;
@@ -597,8 +750,6 @@
 
         async function pushMealToDB() {
             if (!currentUser || !tempMealAnalysis) return;
-            const todayStr = new Date().toISOString().split('T')[0];
-            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_logs', todayStr);
 
             const newTotal = {
                 cals: dailyLog.total.cals + tempMealAnalysis.totals.kcal,
@@ -616,11 +767,26 @@
             };
 
             try {
-                if (dailyLog.items.length === 0) {
-                    await setDoc(docRef, { items: [mealEntry], total: newTotal });
+                if (useLocalStorage) {
+                    // Modo offline
+                    dailyLog.items.push(mealEntry);
+                    dailyLog.total = newTotal;
+                    saveDailyLogLocal();
+                    renderLogs();
+                    updateDashboard();
+                    analyzeContext();
                 } else {
-                    await updateDoc(docRef, { items: arrayUnion(mealEntry), total: newTotal });
+                    // Modo online
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_logs', todayStr);
+                    
+                    if (dailyLog.items.length === 0) {
+                        await setDoc(docRef, { items: [mealEntry], total: newTotal });
+                    } else {
+                        await updateDoc(docRef, { items: arrayUnion(mealEntry), total: newTotal });
+                    }
                 }
+                
                 document.getElementById('meal-input').value = "";
                 document.getElementById('modal-result').classList.add('hidden');
             } catch (err) {
@@ -632,9 +798,18 @@
         async function resetDay() {
             if (!currentUser) return;
             if(!confirm("Limpar todo o histórico de hoje?")) return;
-            const todayStr = new Date().toISOString().split('T')[0];
-            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_logs', todayStr);
-            await setDoc(docRef, { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }});
+            
+            if (useLocalStorage) {
+                dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+                saveDailyLogLocal();
+                renderLogs();
+                updateDashboard();
+                analyzeContext();
+            } else {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_logs', todayStr);
+                await setDoc(docRef, { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }});
+            }
         }
 
         // --- NEW PARSER (DR CARLOS UNITS & WHEY CONFIG) ---
@@ -1016,31 +1191,40 @@
 
         async function loadDailyLogForDate(date) {
             if (!currentUser) return;
-            const dateStr = date.toISOString().split('T')[0];
-            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_logs', dateStr);
+            
+            if (useLocalStorage) {
+                loadDailyLogLocal();
+            } else {
+                const dateStr = date.toISOString().split('T')[0];
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'daily_logs', dateStr);
 
-            if (unsubscribeLogs) unsubscribeLogs();
+                if (unsubscribeLogs) unsubscribeLogs();
 
-            unsubscribeLogs = onSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    dailyLog = docSnap.data();
-                    if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
-                } else {
-                    dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
-                }
-                renderLogs();
-                updateDashboard();
-                
-                // Only analyze if viewing today
-                const today = new Date();
-                if (date.toDateString() === today.toDateString()) {
-                    analyzeContext();
-                }
-            }, (error) => console.log("Error loading logs", error));
+                unsubscribeLogs = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        dailyLog = docSnap.data();
+                        if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+                    } else {
+                        dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+                    }
+                    renderLogs();
+                    updateDashboard();
+                    
+                    // Only analyze if viewing today
+                    const today = new Date();
+                    if (date.toDateString() === today.toDateString()) {
+                        analyzeContext();
+                    }
+                }, (error) => console.log("Error loading logs", error));
+            }
         }
 
         async function loadWeeklyData() {
             if (!currentUser) return;
+            
+            if (useLocalStorage) {
+                return await loadWeeklyDataLocal();
+            }
             
             const weekData = [];
             const today = new Date();
@@ -1220,23 +1404,28 @@
 
         async function loadNotificationSettings() {
             if (!currentUser) return;
-            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'notifications');
             
-            try {
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    notificationSettings = docSnap.data();
-                    updateNotificationUI();
+            if (useLocalStorage) {
+                loadNotificationSettingsLocal();
+            } else {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'notifications');
+                
+                try {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        notificationSettings = docSnap.data();
+                        updateNotificationUI();
+                    }
+                } catch (error) {
+                    console.log("Error loading notification settings", error);
                 }
-            } catch (error) {
-                console.log("Error loading notification settings", error);
             }
         }
 
         async function saveNotificationSettings() {
             if (!currentUser) return;
             
-            notificationSettings = {
+            const newSettings = {
                 breakfast: {
                     time: document.getElementById('breakfast-time').value,
                     enabled: document.getElementById('breakfast-enabled').checked
@@ -1251,8 +1440,13 @@
                 }
             };
             
-            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'notifications');
-            await setDoc(docRef, notificationSettings);
+            if (useLocalStorage) {
+                saveNotificationSettingsLocal(newSettings);
+            } else {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'notifications');
+                await setDoc(docRef, newSettings);
+                notificationSettings = newSettings;
+            }
             
             startNotificationScheduler();
             
