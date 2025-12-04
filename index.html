@@ -542,7 +542,11 @@
         });
 
         function initAuth() {
-            console.log('=== MacroMixer v1.1 - Com Google Auth ===');
+            console.log('=== MacroMixer v1.2 - Com Google Auth ===');
+            console.log('Firebase Auth:', auth);
+            console.log('Verificando elementos...');
+            console.log('btn-login existe?', document.getElementById('btn-login'));
+            console.log('btn-logout existe?', document.getElementById('btn-logout'));
         }
 
         // --- PRESETS DR CARLOS ---
@@ -1431,6 +1435,8 @@
         }
 
         // --- EVENT LISTENERS ---
+        console.log('📌 Registrando event listeners...');
+        
         document.getElementById('goals-form').addEventListener('submit', saveUserSettings);
         document.getElementById('edit-goals-btn').addEventListener('click', () => document.getElementById('goals-section').classList.remove('hidden'));
         document.getElementById('close-goals-btn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('goals-section').classList.add('hidden'); });
@@ -1438,8 +1444,25 @@
         document.getElementById('close-modal').addEventListener('click', () => document.getElementById('modal-result').classList.add('hidden'));
         document.getElementById('confirm-meal').addEventListener('click', pushMealToDB);
         document.getElementById('reset-day-btn').addEventListener('click', resetDay);
-        document.getElementById('btn-login').addEventListener('click', handleLogin);
-        document.getElementById('btn-logout').addEventListener('click', handleLogout);
+        
+        const btnLogin = document.getElementById('btn-login');
+        const btnLogout = document.getElementById('btn-logout');
+        
+        if (btnLogin) {
+            console.log('✅ Botão login encontrado, adicionando listener');
+            btnLogin.addEventListener('click', handleLogin);
+        } else {
+            console.error('❌ Botão login NÃO encontrado!');
+        }
+        
+        if (btnLogout) {
+            console.log('✅ Botão logout encontrado, adicionando listener');
+            btnLogout.addEventListener('click', handleLogout);
+        } else {
+            console.log('⚠️ Botão logout não encontrado (normal se não estiver logado)');
+        }
+        
+        console.log('✅ Event listeners registrados!');
         
         // New event listeners
         document.getElementById('prev-day-btn').addEventListener('click', () => changeViewDate(-1));
@@ -1463,12 +1486,12 @@
         document.getElementById('export-json-btn').addEventListener('click', exportToJSON);
         
         // Initialize
-        console.log('=== INICIALIZANDO APP ===');
+        console.log('🚀 === INICIALIZANDO APP v1.2 ===');
         updateDateDisplay();
         loadNotificationSettings();
         startNotificationScheduler();
-        initAuth(); // IMPORTANTE: Inicializa autenticação
-        console.log('=== APP INICIALIZADO ===');
+        initAuth();
+        console.log('✅ === APP TOTALMENTE INICIALIZADO ===');
 
     </script>
 </body>
