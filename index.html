@@ -43,7 +43,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.3</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.4</span></h1>
             </div>
             <div id="auth-container" class="text-xs">
                  <div id="loading-status" class="text-gray-400 flex items-center gap-2">
@@ -468,46 +468,39 @@
         let notificationSettings = { breakfast: { time: '08:00', enabled: false }, lunch: { time: '12:00', enabled: false }, dinner: { time: '19:00', enabled: false } };
         let notificationIntervals = [];
 
-        // --- AUTH ---
-        const googleProvider = new GoogleAuthProvider();
+        // --- AUTH SIMPLIFICADO ---
         let useLocalStorage = false; // Modo offline
 
+        const enableOfflineMode = () => {
+            console.log('🟡 Ativando modo offline...');
+            useLocalStorage = true;
+            localStorage.setItem('macromixer_offline_mode', 'true');
+            currentUser = { uid: 'local-user', displayName: 'Modo Offline' };
+            
+            // Esconde loading
+            const loadingEl = document.getElementById('loading-status');
+            if (loadingEl) loadingEl.classList.add('hidden');
+            
+            // Esconde botão de login
+            const btnLogin = document.getElementById('btn-login');
+            if (btnLogin) btnLogin.classList.add('hidden');
+            
+            // Mostra status
+            const userStatus = document.getElementById('user-status');
+            userStatus.classList.remove('hidden');
+            userStatus.classList.add('flex');
+            document.getElementById('username-display').innerText = "Modo Offline";
+            document.getElementById('connection-dot').classList.remove('bg-green-500');
+            document.getElementById('connection-dot').classList.add('bg-yellow-500');
+            
+            loadUserSettingsLocal();
+            loadDailyLogLocal();
+            loadNotificationSettingsLocal();
+            console.log('✅ Modo offline ativado!');
+        };
+
         const handleLogin = async () => {
-            const btn = document.getElementById('btn-login');
-            const originalHTML = btn.innerHTML;
-            
-            // Feedback visual
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Conectando...';
-            btn.disabled = true;
-            
-            // Tenta login anônimo primeiro (mais simples e sempre funciona)
-            try { 
-                console.log('Tentando login anônimo...');
-                console.log('Auth object:', auth);
-                await signInAnonymously(auth);
-                console.log('Login anônimo bem-sucedido!');
-            } catch (error) { 
-                console.error('Erro no login anônimo:', error);
-                console.error('Error code:', error.code);
-                console.error('Error message:', error.message);
-                
-                // Restaura botão
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-                
-                // Verifica se é erro de domínio não autorizado
-                if (error.code === 'auth/unauthorized-domain' || error.message.includes('domain')) {
-                    const currentDomain = window.location.hostname;
-                    alert(`⚠️ CONFIGURAÇÃO NECESSÁRIA\n\nO domínio "${currentDomain}" não está autorizado no Firebase.\n\nPara corrigir:\n1. Acesse: console.firebase.google.com\n2. Vá em Authentication > Settings > Authorized domains\n3. Adicione: ${currentDomain}\n\nEnquanto isso, você pode usar o MODO OFFLINE.`);
-                }
-                
-                // Se falhar, oferece modo offline
-                if (confirm("Não foi possível conectar ao Firebase.\n\nDeseja usar o app em MODO OFFLINE?\n(Seus dados ficarão salvos apenas neste navegador)")) {
-                    enableOfflineMode();
-                } else {
-                    alert("Erro ao iniciar o app. Recarregue a página para tentar novamente.");
-                }
-            }
+            enableOfflineMode();
         };
 
         const handleLogout = async () => {
@@ -517,107 +510,28 @@
                     location.reload();
                 }
             } else {
-                try { await signOut(auth); } catch (error) { console.error(error); }
+                try { await signOut(auth); location.reload(); } catch (error) { console.error(error); }
             }
-        };
-
-        const enableOfflineMode = () => {
-            console.log('🟡 Ativando modo offline...');
-            useLocalStorage = true;
-            localStorage.setItem('macromixer_offline_mode', 'true');
-            currentUser = { uid: 'local-user', displayName: 'Modo Offline' };
-            
-            // Esconde loading e botão de login
-            const loadingEl = document.getElementById('loading-status');
-            if (loadingEl) loadingEl.classList.add('hidden');
-            document.getElementById('btn-login').classList.add('hidden');
-            
-            // Mostra status
-            document.getElementById('user-status').classList.remove('hidden');
-            document.getElementById('user-status').classList.add('flex');
-            document.getElementById('username-display').innerText = "Modo Offline";
-            document.getElementById('connection-dot').classList.remove('bg-green-500');
-            document.getElementById('connection-dot').classList.add('bg-yellow-500');
-            
-            loadUserSettingsLocal();
-            loadDailyLogLocal();
-            loadNotificationSettingsLocal();
-            console.log('✅ Modo offline ativado com sucesso!');
         };
 
         const initAuth = async () => {
-            console.log('=== INICIANDO AUTH ===');
-            console.log('URL atual:', window.location.href);
-            console.log('Protocol:', window.location.protocol);
-            console.log('Hostname:', window.location.hostname);
+            console.log('=== INICIANDO AUTH v2.4 ===');
             
             // Verifica se já está em modo offline
             if (localStorage.getItem('macromixer_offline_mode') === 'true') {
-                console.log('Modo offline já ativado anteriormente');
+                console.log('Modo offline salvo - ativando...');
                 enableOfflineMode();
                 return;
             }
             
-            // Detecta se está rodando localmente (file://)
-            const isLocalFile = window.location.protocol === 'file:';
-            
-            if (isLocalFile) {
-                // Modo offline automático para arquivos locais
-                console.log('Detectado arquivo local - ativando modo offline');
+            // SEMPRE ativa modo offline por padrão
+            console.log('Ativando modo offline por padrão...');
+            setTimeout(() => {
                 enableOfflineMode();
-                return;
-            }
-            
-            // CORREÇÃO: Faz login automático com timeout
-            console.log('Tentando login automático...');
-            
-            // Timeout de 5 segundos
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Timeout')), 5000)
-            );
-            
-            try {
-                await Promise.race([
-                    signInAnonymously(auth),
-                    timeoutPromise
-                ]);
-                console.log('✅ Login automático bem-sucedido!');
-            } catch (error) {
-                console.error('❌ Erro no login automático:', error);
-                // Se falhar ou timeout, ativa modo offline automaticamente
-                console.log('Ativando modo offline como fallback...');
-                enableOfflineMode();
-            }
+            }, 500);
         };
 
-        onAuthStateChanged(auth, (user) => {
-            console.log('=== AUTH STATE CHANGED ===');
-            console.log('User:', user);
-            
-            // Esconde o loading
-            const loadingEl = document.getElementById('loading-status');
-            if (loadingEl) loadingEl.classList.add('hidden');
-            
-            if (user) {
-                console.log('✅ Usuário autenticado:', user.uid);
-                currentUser = user;
-                document.getElementById('btn-login').classList.add('hidden');
-                document.getElementById('user-status').classList.remove('hidden');
-                document.getElementById('user-status').classList.add('flex');
-                document.getElementById('username-display').innerText = user.displayName || "Visitante";
-                loadUserSettings();
-                loadDailyLog();
-            } else {
-                console.log('❌ Nenhum usuário autenticado');
-                currentUser = null;
-                const btnLogin = document.getElementById('btn-login');
-                btnLogin.classList.remove('hidden');
-                btnLogin.classList.add('flex');
-                document.getElementById('user-status').classList.add('hidden');
-                document.getElementById('user-status').classList.remove('flex');
-                resetUIState();
-            }
-        });
+        // Remove onAuthStateChanged - não precisa mais
 
         // --- PRESETS DR CARLOS ---
         window.applyPreset = (type) => {
