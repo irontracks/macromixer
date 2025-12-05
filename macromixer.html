@@ -76,7 +76,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.2.4</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.3.0</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -483,6 +483,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // --- DATABASE DE ALIMENTOS v2.2 - DR. CARLOS EDITION (Calibrado) ---
         // Base calibrada para Bodybuilding Enhanced
@@ -655,6 +656,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
         const googleProvider = new GoogleAuthProvider();
         const appId = "macromixer-prod";
         
@@ -1057,7 +1059,7 @@
                     kcal: tempMealAnalysis.totals.kcal || 0
                 },
                 isApproximate: tempMealAnalysis.isApproximate || false,
-                photo: currentMealPhoto || ""
+                photo: currentMealPhoto || "" // URL do Firebase Storage (não base64)
             };
 
             const todayStr = new Date().toISOString().split('T')[0];
@@ -1676,25 +1678,48 @@
             });
         }
 
-        // ==================== FOTO DAS REFEIÇÕES ====================
-        function handlePhotoSelect(event) {
+        // ==================== FOTO DAS REFEIÇÕES (FIREBASE STORAGE) ====================
+        async function handlePhotoSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
             
-            // Limita tamanho (max 2MB)
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Foto muito grande! Máximo 2MB.');
+            // Limita tamanho (max 5MB - Firebase Storage gratuito)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('📸 Foto muito grande! Máximo 5MB.');
                 return;
             }
             
+            // Preview local enquanto faz upload
             const reader = new FileReader();
             reader.onload = function(e) {
-                currentMealPhoto = e.target.result;
-                document.getElementById('photo-preview-img').src = currentMealPhoto;
+                document.getElementById('photo-preview-img').src = e.target.result;
                 document.getElementById('photo-preview').classList.remove('hidden');
                 document.getElementById('remove-photo-btn').classList.remove('hidden');
             };
             reader.readAsDataURL(file);
+            
+            // Upload para Firebase Storage (se online)
+            if (currentUser && !useLocalStorage) {
+                try {
+                    const timestamp = Date.now();
+                    const fileName = `meal_${currentUser.uid}_${timestamp}.jpg`;
+                    const storageRef = ref(storage, `meal_photos/${fileName}`);
+                    
+                    console.log('📤 Fazendo upload da foto...');
+                    await uploadBytes(storageRef, file);
+                    const downloadURL = await getDownloadURL(storageRef);
+                    
+                    currentMealPhoto = downloadURL; // URL da foto no Storage
+                    console.log('✅ Foto enviada com sucesso!', downloadURL);
+                } catch (error) {
+                    console.error('❌ Erro ao fazer upload da foto:', error);
+                    alert('⚠️ Erro ao enviar foto. Continuando sem foto.');
+                    currentMealPhoto = null;
+                }
+            } else {
+                // Modo offline: salva base64 no localStorage (limitado)
+                currentMealPhoto = reader.result;
+            }
         }
 
         function removePhoto() {
@@ -1704,7 +1729,9 @@
             document.getElementById('meal-photo-input').value = '';
         }
 
-        function showMealPhoto(photoData) {
+        function showMealPhoto(photoURL) {
+            if (!photoURL) return;
+            
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4';
             modal.innerHTML = `
@@ -1712,7 +1739,7 @@
                     <button class="absolute -top-10 right-0 text-white text-2xl hover:text-gray-300" onclick="this.closest('.fixed').remove()">
                         <i class="fa-solid fa-times"></i>
                     </button>
-                    <img src="${photoData}" class="w-full rounded-lg shadow-2xl" />
+                    <img src="${photoURL}" class="w-full rounded-lg shadow-2xl" alt="Foto da Refeição" />
                 </div>
             `;
             document.body.appendChild(modal);
