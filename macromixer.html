@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacroMixer - Dr. Carlos Edition</title>
+    <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
+    <meta name="theme-color" content="#06b6d4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MacroMixer">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3480/3480822.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a; /* Slate 900 - Darker base */
+            color: #e2e8f0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7); /* Slate 800 */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            transition: background 0.3s ease, border 0.3s ease;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; transition: background 0.3s ease; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .progress-bar {
+            transition: width 1s ease-in-out, height 1s ease-in-out;
+        }
+        
+        .preset-btn {
+            transition: all 0.3s ease;
+        }
+        .preset-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* LIGHT MODE */
+        body.light-mode {
+            background-color: #f1f5f9; /* Slate 100 */
+            color: #1e293b; /* Slate 800 */
+        }
+        body.light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(203, 213, 225, 0.6);
+        }
+        body.light-mode ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        body.light-mode ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+        }
+        body.light-mode ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        body.light-mode nav {
+            background-color: #ffffff !important;
+            border-bottom-color: #e2e8f0 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-10">
+
+    <!-- Navbar -->
+    <nav class="w-full bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 shadow-2xl">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.2.2</span></h1>
+            </div>
+            <div id="auth-container" class="text-xs flex items-center gap-3">
+                <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
+                    <i class="fa-solid fa-moon" id="theme-icon"></i>
+                </button>
+                <button id="btn-login" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-600 transition-colors flex items-center gap-2">
+                    <i class="fa-brands fa-google"></i> Entrar
+                </button>
+                <div id="user-status" class="hidden text-gray-400 flex items-center gap-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse" id="connection-dot"></div>
+                    <span id="username-display">Online</span>
+                    <button id="btn-logout" class="ml-2 text-slate-500 hover:text-white" title="Sair"><i class="fa-solid fa-sign-out-alt"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-md px-4 mt-6 space-y-6">
+
+        <!-- Goals / Presets Section (Collapsible) -->
+        <section id="goals-section" class="glass-panel rounded-xl p-4 shadow-lg hidden border-l-4 border-cyan-500">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-microchip mr-2"></i>Calibragem Dr. Carlos</h2>
+                <button id="close-goals-btn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+
+            <!-- Dr Carlos Presets -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="applyPreset('A')" class="preset-btn bg-gradient-to-br from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 border border-red-500/30 rounded-lg p-3 text-left group">
+                    <div class="text-xs text-red-300 uppercase font-bold tracking-widest mb-1">Pré-Set A</div>
+                    <div class="text-white font-bold text-sm"><i class="fa-solid fa-fire mr-1"></i> MASSACRE</div>
+                    <div class="text-[10px] text-red-200 mt-1">Perna/Costas (High Carb)</div>
+                </button>
+                <button onclick="applyPreset('B')" class="preset-btn bg-gradient-to-br from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 border border-blue-500/30 rounded-lg p-3 text-left group">
+                    <div class="text-xs text-blue-300 uppercase font-bold tracking-widest mb-1">Pré-Set B</div>
+                    <div class="text-white font-bold text-sm"><i class="fa-solid fa-snowflake mr-1"></i> VÁCUO</div>
+                    <div class="text-[10px] text-blue-200 mt-1">Ombro/Braço (Low Carb)</div>
+                </button>
+            </div>
+
+            <form id="goals-form" class="space-y-4">
+                <!-- User Profile -->
+                <div>
+                    <label class="text-xs text-gray-400 uppercase font-bold">Peso Corporal (kg)</label>
+                    <input type="number" id="user-weight" step="0.1" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-cyan-500 outline-none font-mono" placeholder="Ex: 93.0">
+                    <p class="text-[10px] text-gray-500 mt-1">Base para cálculo de 2.5g a 3.0g de proteína.</p>
+                </div>
+
+                <!-- Custom Whey Config -->
+                <div class="border-t border-slate-700/50 pt-3 mt-2 bg-slate-800/30 p-3 rounded-lg">
+                    <label class="text-xs text-cyan-400 uppercase font-bold mb-2 block"><i class="fa-solid fa-flask mr-1"></i> Configuração do Whey</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] text-gray-400">Tamanho da Dose (g)</label>
+                            <input type="number" id="whey-dose" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Ex: 30">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-400">Proteína na Dose (g)</label>
+                            <input type="number" id="whey-prot" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs font-bold text-green-500" placeholder="Ex: 24">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Macros -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-gray-400">Calorias (kcal)</label>
+                        <input type="number" id="goal-cals" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-purple-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Proteína (g)</label>
+                        <input type="number" id="goal-prot" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-green-500 outline-none font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Carboidrato (g)</label>
+                        <input type="number" id="goal-carb" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Gordura (g)</label>
+                        <input type="number" id="goal-fat" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-yellow-500 outline-none">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-3 rounded transition-all uppercase tracking-wider text-sm shadow-lg shadow-cyan-900/50">Salvar Calibragem</button>
+            </form>
+        </section>
+
+        <!-- Dashboard / Equalizer -->
+        <section class="glass-panel rounded-xl p-5 shadow-xl relative overflow-hidden">
+             <!-- Background Grid Effect -->
+             <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#64748b 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+             <button id="edit-goals-btn" class="absolute top-3 right-3 text-slate-500 hover:text-cyan-400 text-xs uppercase font-bold tracking-wider z-10">
+                <i class="fa-solid fa-gear mr-1"></i> Setup
+            </button>
+            
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
+                <h2 class="text-cyan-500 text-xs uppercase font-bold tracking-widest">Painel de Controle</h2>
+            </div>
+
+            <!-- Calories Main -->
+            <div class="mb-6 text-center relative z-10">
+                <div class="text-4xl font-black text-white mb-1 tracking-tighter"><span id="display-cals">0</span> <span class="text-lg text-slate-500 font-medium">/ <span id="target-cals">0</span></span></div>
+                <div class="w-full bg-slate-900 rounded-full h-4 overflow-hidden border border-slate-800">
+                    <div id="bar-cals" class="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 h-4 rounded-full progress-bar shadow-[0_0_15px_rgba(236,72,153,0.5)]" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-xs mt-2 text-slate-400 font-mono">
+                    <span>CONSUMIDO</span>
+                    <span id="saldo-cals">BUFFER: 0</span>
+                </div>
+            </div>
+
+            <!-- Macros Grid -->
+            <div class="grid grid-cols-3 gap-4 text-center relative z-10">
+                <!-- Protein -->
+                <div class="bg-slate-800/50 rounded-lg p-2 border border-green-900/30">
+                    <div class="text-[10px] text-green-400 uppercase font-bold mb-2">Proteína</div>
+                    <div class="w-full bg-slate-900 rounded-full h-20 relative mx-auto w-3 overflow-hidden flex flex-col justify-end group border border-slate-800">
+                        <div id="bar-prot" class="bg-green-500 w-full progress-bar shadow-[0_0_10px_rgba(34,197,94,0.4)]" style="height: 0%"></div>
+                    </div>
+                    <div class="text-sm font-bold mt-2 text-white"><span id="display-prot">0</span>g</div>
+                    <div class="text-[10px] text-slate-500">/<span id="target-prot">0</span></div>
+                </div>
+                <!-- Carbs -->
+                <div class="bg-slate-800/50 rounded-lg p-2 border border-blue-900/30">
+                    <div class="text-[10px] text-blue-400 uppercase font-bold mb-2">Carbo</div>
+                    <div class="w-full bg-slate-900 rounded-full h-20 relative mx-auto w-3 overflow-hidden flex flex-col justify-end group border border-slate-800">
+                        <div id="bar-carb" class="bg-blue-500 w-full progress-bar shadow-[0_0_10px_rgba(59,130,246,0.4)]" style="height: 0%"></div>
+                    </div>
+                    <div class="text-sm font-bold mt-2 text-white"><span id="display-carb">0</span>g</div>
+                    <div class="text-[10px] text-slate-500">/<span id="target-carb">0</span></div>
+                </div>
+                <!-- Fat -->
+                <div class="bg-slate-800/50 rounded-lg p-2 border border-yellow-900/30">
+                    <div class="text-[10px] text-yellow-400 uppercase font-bold mb-2">Gordura</div>
+                    <div class="w-full bg-slate-900 rounded-full h-20 relative mx-auto w-3 overflow-hidden flex flex-col justify-end group border border-slate-800">
+                        <div id="bar-fat" class="bg-yellow-500 w-full progress-bar shadow-[0_0_10px_rgba(234,179,8,0.4)]" style="height: 0%"></div>
+                    </div>
+                    <div class="text-sm font-bold mt-2 text-white"><span id="display-fat">0</span>g</div>
+                    <div class="text-[10px] text-slate-500">/<span id="target-fat">0</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Water Counter -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-blue-400">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-droplet text-blue-400 text-lg"></i>
+                    <h2 class="text-sm font-bold text-white">Hidratação</h2>
+                </div>
+                <button id="reset-water-btn" class="text-xs text-slate-500 hover:text-white" title="Resetar">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+            
+            <div class="text-center mb-3">
+                <div class="text-3xl font-black text-white mb-1">
+                    <span id="water-current">0</span><span class="text-lg text-slate-500">ml</span>
+                </div>
+                <div class="text-xs text-slate-400">Meta: <span id="water-goal">3000</span>ml</div>
+            </div>
+            
+            <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-800 mb-4">
+                <div id="water-bar" class="bg-gradient-to-r from-blue-400 to-cyan-400 h-3 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(96,165,250,0.5)]" style="width: 0%"></div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-2">
+                <button id="water-btn-100" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded transition-all border border-slate-700">
+                    +100ml
+                </button>
+                <button id="water-btn-250" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded transition-all border border-slate-700">
+                    +250ml
+                </button>
+                <button id="water-btn-500" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded transition-all">
+                    +500ml
+                </button>
+                <button id="water-btn-1000" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded transition-all">
+                    +1L
+                </button>
+            </div>
+            
+            <div id="water-status" class="text-xs text-center mt-3 text-slate-400">
+                <i class="fa-solid fa-info-circle mr-1"></i>Beba água regularmente!
+            </div>
+        </section>
+
+        <!-- Weight Tracker -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-purple-500">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-weight-scale text-purple-400 text-lg"></i>
+                    <h2 class="text-sm font-bold text-white">Peso Corporal</h2>
+                </div>
+                <button id="toggle-weight-chart-btn" class="text-xs text-purple-400 hover:text-purple-300">
+                    <i class="fa-solid fa-chart-line mr-1"></i>Gráfico
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-2 mb-3">
+                <input type="number" id="weight-input" step="0.1" placeholder="Ex: 93.5" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-white text-center text-lg font-bold focus:border-purple-500 outline-none" />
+                <span class="text-slate-400 text-sm whitespace-nowrap">kg</span>
+                <button id="save-weight-btn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded font-bold transition-all whitespace-nowrap text-sm">
+                    Salvar
+                </button>
+            </div>
+            
+            <div id="weight-info" class="text-xs text-center text-slate-400">
+                <i class="fa-solid fa-info-circle mr-1"></i>Registre seu peso diariamente
+            </div>
+            
+            <!-- Weight Chart (Hidden by default) -->
+            <div id="weight-chart-container" class="hidden mt-4 pt-4 border-t border-slate-700">
+                <canvas id="weight-chart" class="w-full" height="200"></canvas>
+                <div id="weight-stats" class="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
+                    <div class="bg-slate-800/50 rounded p-2">
+                        <div class="text-slate-400">Inicial</div>
+                        <div class="text-white font-bold" id="weight-initial">--</div>
+                    </div>
+                    <div class="bg-slate-800/50 rounded p-2">
+                        <div class="text-slate-400">Atual</div>
+                        <div class="text-white font-bold" id="weight-current">--</div>
+                    </div>
+                    <div class="bg-slate-800/50 rounded p-2">
+                        <div class="text-slate-400">Variação</div>
+                        <div class="font-bold" id="weight-diff">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Suggestion Box (Dynamic) -->
+        <div id="suggestion-box" class="hidden bg-slate-800 border-l-4 border-cyan-500 p-4 rounded text-sm text-gray-300 shadow-lg">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid fa-user-doctor text-cyan-400 text-lg mt-1"></i> 
+                <div>
+                    <span class="block text-xs text-cyan-500 font-bold uppercase mb-1">Dr. Carlos Bot</span>
+                    <span id="suggestion-text">Analisando dados...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg">
+            <h2 class="text-gray-400 text-xs uppercase font-bold tracking-widest mb-3">Input de Refeição</h2>
+            <div class="relative">
+                <textarea id="meal-input" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-all resize-none font-mono text-sm" placeholder="Digite aqui... Ex:&#10;5 colheres de arroz&#10;2 bifes medios&#10;3 ovos&#10;Whey 40g"></textarea>
+                <div class="absolute bottom-3 right-3">
+                    <button id="btn-calculate" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white p-3 rounded-full shadow-lg transform hover:scale-105 transition-all w-12 h-12 flex items-center justify-center">
+                        <i class="fa-solid fa-calculator"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1 mt-2 ml-1">
+                <p class="text-[10px] text-gray-500"><i class="fa-solid fa-circle-info mr-1 text-cyan-500"></i> Aceita gramas (preciso) ou colheres/conchas (aproximado).</p>
+                <p class="text-[10px] text-gray-600 italic">Dica: Folhas < 300g? Nem registre (Fibra Fantasma).</p>
+            </div>
+        </section>
+
+        <!-- Daily Log -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg pb-8">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-3">
+                    <button id="prev-day-btn" class="text-cyan-400 hover:text-cyan-300"><i class="fa-solid fa-chevron-left"></i></button>
+                    <h2 id="current-date-display" class="text-gray-400 text-xs uppercase font-bold tracking-widest">Hoje</h2>
+                    <button id="next-day-btn" class="text-cyan-400 hover:text-cyan-300"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="flex gap-2">
+                    <button id="copy-yesterday-btn" class="text-xs text-green-400 hover:text-green-300" title="Copiar refeições de ontem"><i class="fa-solid fa-copy mr-1"></i>Copiar</button>
+                    <button id="view-history-btn" class="text-xs text-cyan-400 hover:text-cyan-300"><i class="fa-solid fa-calendar-days mr-1"></i>Histórico</button>
+                    <button id="reset-day-btn" class="text-xs text-red-400 hover:text-red-300"><i class="fa-solid fa-trash mr-1"></i>Zerar</button>
+                </div>
+            </div>
+            
+            <div id="logs-container" class="space-y-3">
+                <div class="text-center text-gray-600 py-4 italic text-sm">Nenhuma refeição registrada hoje.</div>
+            </div>
+        </section>
+
+        <!-- Weekly History Section -->
+        <section id="history-section" class="glass-panel rounded-xl p-4 shadow-lg hidden border-l-4 border-purple-500">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-chart-line mr-2"></i>Histórico Semanal</h2>
+                <button id="close-history-btn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+            
+            <!-- Chart Container -->
+            <div class="bg-slate-900 rounded-lg p-4 mb-4">
+                <canvas id="weekly-chart" class="w-full" style="max-height: 250px;"></canvas>
+            </div>
+            
+            <!-- Weekly Summary -->
+            <div id="weekly-summary" class="space-y-2">
+                <!-- Dynamic content -->
+            </div>
+            
+            <!-- Export Options -->
+            <div class="mt-4 pt-4 border-t border-slate-700">
+                <h3 class="text-xs text-gray-400 uppercase font-bold mb-2">Exportar Dados</h3>
+                <div class="flex gap-2">
+                    <button id="export-csv-btn" class="flex-1 bg-green-700 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-file-csv mr-1"></i> CSV
+                    </button>
+                    <button id="export-json-btn" class="flex-1 bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-file-code mr-1"></i> JSON
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notifications Section -->
+        <section id="notifications-section" class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-orange-500">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-sm font-bold text-white"><i class="fa-solid fa-bell mr-2"></i>Lembretes</h2>
+                <button id="toggle-notifications-btn" class="text-xs text-orange-400 hover:text-orange-300">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+            
+            <div id="notification-settings" class="hidden space-y-3">
+                <div class="flex items-center justify-between bg-slate-800/50 p-2 rounded">
+                    <span class="text-xs text-gray-300">Lembrete de Café da Manhã</span>
+                    <div class="flex items-center gap-2">
+                        <input type="time" id="breakfast-time" value="08:00" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                        <input type="checkbox" id="breakfast-enabled" class="w-4 h-4">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between bg-slate-800/50 p-2 rounded">
+                    <span class="text-xs text-gray-300">Lembrete de Almoço</span>
+                    <div class="flex items-center gap-2">
+                        <input type="time" id="lunch-time" value="12:00" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                        <input type="checkbox" id="lunch-enabled" class="w-4 h-4">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between bg-slate-800/50 p-2 rounded">
+                    <span class="text-xs text-gray-300">Lembrete de Jantar</span>
+                    <div class="flex items-center gap-2">
+                        <input type="time" id="dinner-time" value="19:00" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                        <input type="checkbox" id="dinner-enabled" class="w-4 h-4">
+                    </div>
+                </div>
+                <button id="save-notifications-btn" class="w-full bg-orange-700 hover:bg-orange-600 text-white text-xs font-bold py-2 rounded transition-all">
+                    Salvar Lembretes
+                </button>
+            </div>
+            
+            <div id="notification-status" class="text-xs text-gray-400 text-center py-2">
+                <i class="fa-solid fa-info-circle mr-1"></i>Configure seus lembretes para não esquecer de comer!
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal for Meal Details -->
+    <div id="modal-result" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-xl w-full max-w-sm border border-slate-700 shadow-2xl overflow-hidden transform transition-all">
+            <div class="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white"><i class="fa-solid fa-check-circle text-cyan-500 mr-2"></i>Conferência</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+            
+            <!-- Warning Banner for Approximate Measures -->
+            <div id="accuracy-warning" class="hidden bg-yellow-900/40 border-l-4 border-yellow-500 p-3 mx-4 mt-4">
+                <div class="flex gap-2 text-yellow-200 text-xs">
+                    <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                    <div>
+                        <span class="font-bold">Cálculo Aproximado!</span>
+                        <p class="opacity-80">Você usou colheres/peças. O erro pode ser de 20-30%. Use balança quando possível.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 max-h-[50vh] overflow-y-auto" id="modal-content">
+                <!-- Dynamic Content -->
+            </div>
+            
+            <!-- Photo Section -->
+            <div class="px-4 pb-3">
+                <div class="flex items-center gap-2 mb-2">
+                    <label for="meal-photo-input" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 px-3 rounded transition-all cursor-pointer text-center border border-slate-700">
+                        <i class="fa-solid fa-camera mr-2"></i>Adicionar Foto
+                    </label>
+                    <input type="file" id="meal-photo-input" accept="image/*" capture="environment" class="hidden" />
+                    <button id="remove-photo-btn" class="hidden bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+                <div id="photo-preview" class="hidden rounded overflow-hidden border border-slate-700">
+                    <img id="photo-preview-img" class="w-full" />
+                </div>
+            </div>
+            
+            <div class="p-4 bg-slate-900 border-t border-slate-700">
+                <button id="confirm-meal" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-cyan-900/50">
+                    Lançar na Dieta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- DATABASE DE ALIMENTOS v2.2 - DR. CARLOS EDITION (Calibrado) ---
+        // Base calibrada para Bodybuilding Enhanced
+        // Valores mistos: 100g + Unidades práticas
+        const foodDatabase = {
+    // ==================== CARBOIDRATOS ====================
+    // Arroz e Cereais
+    "arroz": { c: 28.1, p: 2.5, f: 0.2, kcal: 129, unit: "Arroz Branco (Cozido) - 100g", approx: { colher: 25, escumadeira: 80, xicara: 150 } },
+    "arroz branco": { c: 28.1, p: 2.5, f: 0.2, kcal: 129, unit: "Arroz Branco (Cozido) - 100g", approx: { colher: 25, escumadeira: 80 } },
+    "arroz integral": { c: 25.8, p: 2.6, f: 1.0, kcal: 123, unit: "Arroz Integral (Cozido) - 100g", approx: { colher: 25, escumadeira: 80 } },
+    
+    // Aveia
+    "aveia": { c: 66.6, p: 13.9, f: 8.5, kcal: 394, unit: "Aveia em Flocos - 100g", approx: { colher: 15, xicara: 80 } },
+    "aveia colher": { c: 10, p: 2.1, f: 1.3, kcal: 59, unit: "Aveia (1 Colher Sopa) - 15g", approx: { colher: 15 } },
+    "1 colher aveia": { c: 10, p: 2.1, f: 1.3, kcal: 59, unit: "Aveia (1 Colher Sopa) - 15g", approx: { colher: 15 } },
+    
+    // Tubérculos
+    "batata": { c: 20.1, p: 1.7, f: 0.1, kcal: 86, unit: "Batata Inglesa (Cozida) - 100g", approx: { colher: 30, unidade: 150 } },
+    "batata inglesa": { c: 20.1, p: 1.7, f: 0.1, kcal: 86, unit: "Batata Inglesa (Cozida) - 100g", approx: { colher: 30, unidade: 150 } },
+    "batata doce": { c: 23.9, p: 1.3, f: 0.3, kcal: 103, unit: "Batata Doce (Cozida) - 100g", approx: { colher: 30, unidade: 150, rodelas: 40 } },
+    "mandioca": { c: 30.1, p: 0.6, f: 0.3, kcal: 125, unit: "Mandioca/Aipim (Cozida) - 100g", approx: { pedaco: 100, colher: 40 } },
+    "aipim": { c: 30.1, p: 0.6, f: 0.3, kcal: 125, unit: "Mandioca/Aipim (Cozida) - 100g", approx: { pedaco: 100, colher: 40 } },
+    
+    // Pães
+    "pao": { c: 29, p: 4.5, f: 0.5, kcal: 135, unit: "Pão Francês (1 Unidade) - 50g", approx: { unidade: 50 } },
+    "pão": { c: 29, p: 4.5, f: 0.5, kcal: 135, unit: "Pão Francês (1 Unidade) - 50g", approx: { unidade: 50 } },
+    "pao frances": { c: 29, p: 4.5, f: 0.5, kcal: 135, unit: "Pão Francês (1 Unidade) - 50g", approx: { unidade: 50 } },
+    "pao de forma": { c: 11, p: 2.1, f: 0.9, kcal: 62, unit: "Pão de Forma (1 Fatia) - 25g", approx: { fatia: 25 } },
+    "pão de forma": { c: 11, p: 2.1, f: 0.9, kcal: 62, unit: "Pão de Forma (1 Fatia) - 25g", approx: { fatia: 25 } },
+    "tapioca": { c: 60, p: 0, f: 0, kcal: 240, unit: "Tapioca (Goma Pronta) - 100g", approx: { colher: 20, crepe: 100 } },
+    
+    // Macarrão (mantendo da base antiga)
+    "macarrao": { c: 30, p: 5, f: 1, kcal: 157, unit: "Macarrão (Cozido) - 100g", approx: { escumadeira: 90, pegador: 100, prato: 250 } },
+    "macarrão": { c: 30, p: 5, f: 1, kcal: 157, unit: "Macarrão (Cozido) - 100g", approx: { escumadeira: 90, pegador: 100 } },
+    
+    // ==================== PROTEÍNAS ====================
+    // Frango
+    "frango": { c: 0, p: 32.0, f: 2.5, kcal: 159, unit: "Peito de Frango (Grelhado) - 100g", approx: { bife: 120, file: 120, pedaco: 100, colher: 30 } },
+    "peito de frango": { c: 0, p: 32.0, f: 2.5, kcal: 159, unit: "Peito de Frango (Grelhado) - 100g", approx: { bife: 120, file: 120, pedaco: 100 } },
+    "frango grelhado": { c: 0, p: 32.0, f: 2.5, kcal: 159, unit: "Peito de Frango (Grelhado) - 100g", approx: { bife: 120, file: 120 } },
+    "frango desfiado": { c: 0, p: 31.0, f: 3.0, kcal: 151, unit: "Peito de Frango (Cozido/Desfiado) - 100g", approx: { colher: 30, xicara: 140 } },
+    "frango cozido": { c: 0, p: 31.0, f: 3.0, kcal: 151, unit: "Peito de Frango (Cozido/Desfiado) - 100g", approx: { colher: 30, xicara: 140 } },
+    
+    // Carnes Bovinas
+    "carne": { c: 0, p: 35.9, f: 7.3, kcal: 219, unit: "Patinho Moído (Refogado) - 100g", approx: { colher: 30, bife: 100, pedaco: 100 } },
+    "patinho": { c: 0, p: 35.9, f: 7.3, kcal: 219, unit: "Patinho Moído (Refogado) - 100g", approx: { colher: 30, bife: 100 } },
+    "carne moida": { c: 0, p: 35.9, f: 7.3, kcal: 219, unit: "Patinho Moído (Refogado) - 100g", approx: { colher: 30, bife: 100 } },
+    "bife": { c: 0, p: 32, f: 11, kcal: 240, unit: "Bife Alcatra/Contra (Grelhado) - 100g", approx: { unidade: 120, medio: 120, grande: 180 } },
+    "alcatra": { c: 0, p: 32, f: 11, kcal: 240, unit: "Bife Alcatra/Contra (Grelhado) - 100g", approx: { bife: 120, pedaco: 100 } },
+    "contra file": { c: 0, p: 32, f: 11, kcal: 240, unit: "Bife Alcatra/Contra (Grelhado) - 100g", approx: { bife: 120, pedaco: 100 } },
+    "filé mignon": { c: 0, p: 32, f: 8, kcal: 200, unit: "Filé Mignon (Grelhado) - 100g", approx: { bife: 120, medalhao: 80 } },
+    "file mignon": { c: 0, p: 32, f: 8, kcal: 200, unit: "Filé Mignon (Grelhado) - 100g", approx: { bife: 120, medalhao: 80 } },
+    
+    // Peixes
+    "tilapia": { c: 0, p: 24, f: 2.0, kcal: 115, unit: "Tilápia (Grelhada) - 100g", approx: { file: 120, pedaco: 100 } },
+    "tilápia": { c: 0, p: 24, f: 2.0, kcal: 115, unit: "Tilápia (Grelhada) - 100g", approx: { file: 120, pedaco: 100 } },
+    "file de tilapia": { c: 0, p: 24, f: 2.0, kcal: 115, unit: "Tilápia (Grelhada) - 100g", approx: { file: 120, pedaco: 100 } },
+    "filé de tilápia": { c: 0, p: 24, f: 2.0, kcal: 115, unit: "Tilápia (Grelhada) - 100g", approx: { file: 120, pedaco: 100 } },
+    "salmao": { c: 0, p: 24, f: 13, kcal: 220, unit: "Salmão (Grelhado) - 100g", approx: { file: 120, posta: 150, pedaco: 100 } },
+    "salmão": { c: 0, p: 24, f: 13, kcal: 220, unit: "Salmão (Grelhado) - 100g", approx: { file: 120, posta: 150, pedaco: 100 } },
+    "atum": { c: 0, p: 30, f: 1, kcal: 132, unit: "Atum (Conserva em Água) - 100g", approx: { lata: 140, colher: 30 } },
+    
+    // Ovos
+    "ovo": { c: 0.4, p: 6.3, f: 5.0, kcal: 72, unit: "Ovo Inteiro (1 Grande) - 50g", approx: { unidade: 50 } },
+    "1 ovo": { c: 0.4, p: 6.3, f: 5.0, kcal: 72, unit: "Ovo Inteiro (1 Grande) - 50g", approx: { unidade: 50 } },
+    "ovo grande": { c: 0.4, p: 6.3, f: 5.0, kcal: 72, unit: "Ovo Inteiro (1 Grande) - 50g", approx: { unidade: 50 } },
+    "clara": { c: 0.2, p: 3.6, f: 0, kcal: 17, unit: "Clara de Ovo (1 Unidade) - 35g", approx: { unidade: 35 } },
+    "claras": { c: 1, p: 11, f: 0, kcal: 50, unit: "Clara Pasteurizada (Líquida) - 100g", approx: { xicara: 240, colher: 15 } },
+    "clara liquida": { c: 1, p: 11, f: 0, kcal: 50, unit: "Clara Pasteurizada (Líquida) - 100g", approx: { xicara: 240 } },
+    "clara pasteurizada": { c: 1, p: 11, f: 0, kcal: 50, unit: "Clara Pasteurizada (Líquida) - 100g", approx: { xicara: 240 } },
+    "gema": { c: 0.6, p: 3, f: 5, kcal: 55, unit: "Gema de Ovo - 17g", approx: { unidade: 17 } },
+    
+    // Suplementos - CALIBRADO DR. CARLOS
+    "whey": { c: 4.0, p: 17, f: 1.2, kcal: 120, unit: "Whey MK Concentrado 56% (1 Scoop) - 30g", approx: { scoop: 30, dose: 30, colher: 15 } },
+    "whey mk": { c: 4.0, p: 17, f: 1.2, kcal: 120, unit: "Whey MK Concentrado 56% (1 Scoop) - 30g", approx: { scoop: 30, dose: 30 } },
+    "whey concentrado": { c: 4.0, p: 17, f: 1.2, kcal: 120, unit: "Whey MK Concentrado 56% (1 Scoop) - 30g", approx: { scoop: 30, dose: 30 } },
+    "whey padrao": { c: 2.5, p: 24, f: 1.0, kcal: 115, unit: "Whey Padrão 80% (1 Scoop) - 30g", approx: { scoop: 30, dose: 30 } },
+    "whey isolado": { c: 2.5, p: 24, f: 1.0, kcal: 115, unit: "Whey Padrão 80% (1 Scoop) - 30g", approx: { scoop: 30, dose: 30 } },
+    "1 scoop whey": { c: 4.0, p: 17, f: 1.2, kcal: 120, unit: "Whey MK Concentrado 56% (1 Scoop) - 30g", approx: { scoop: 30 } },
+    "creatina": { c: 0, p: 0, f: 0, kcal: 0, unit: "Creatina - 5g", approx: { colher: 5 } },
+    
+    // Queijos (mantendo os mais usados)
+    "queijo": { c: 2, p: 25, f: 30, kcal: 400, unit: "Queijo Mussarela - 100g", approx: { fatia: 20, pedaco: 30 } },
+    "mussarela": { c: 2, p: 25, f: 30, kcal: 400, unit: "Queijo Mussarela - 100g", approx: { fatia: 20, pedaco: 30 } },
+    "queijo cottage": { c: 3, p: 11, f: 4, kcal: 98, unit: "Queijo Cottage - 100g", approx: { colher: 30, pote: 200 } },
+    "cottage": { c: 3, p: 11, f: 4, kcal: 98, unit: "Queijo Cottage - 100g", approx: { colher: 30, pote: 200 } },
+    
+    // Leite e Iogurte
+    "leite": { c: 5, p: 3.2, f: 3.5, kcal: 61, unit: "Leite Integral - 100g", approx: { copo: 200, xicara: 240 } },
+    "leite desnatado": { c: 5, p: 3.4, f: 0.2, kcal: 35, unit: "Leite Desnatado - 100g", approx: { copo: 200, xicara: 240 } },
+    "iogurte": { c: 4, p: 3.5, f: 3, kcal: 61, unit: "Iogurte Natural - 100g", approx: { pote: 170, colher: 30 } },
+    "iogurte grego": { c: 4, p: 9, f: 5, kcal: 97, unit: "Iogurte Grego - 100g", approx: { pote: 170, colher: 30 } },
+    
+    // ==================== LEGUMINOSAS ====================
+    "feijao": { c: 13.6, p: 4.8, f: 0.5, kcal: 76, unit: "Feijão Carioca (Cozido/Caldo) - 100g", approx: { colher: 20, concha: 140 } },
+    "feijão": { c: 13.6, p: 4.8, f: 0.5, kcal: 76, unit: "Feijão Carioca (Cozido/Caldo) - 100g", approx: { colher: 20, concha: 140 } },
+    "feijao carioca": { c: 13.6, p: 4.8, f: 0.5, kcal: 76, unit: "Feijão Carioca (Cozido/Caldo) - 100g", approx: { colher: 20, concha: 140 } },
+    "1 concha feijao": { c: 19, p: 6.7, f: 0.7, kcal: 106, unit: "Feijão (1 Concha) - 140g", approx: { concha: 140 } },
+    "concha de feijao": { c: 19, p: 6.7, f: 0.7, kcal: 106, unit: "Feijão (1 Concha) - 140g", approx: { concha: 140 } },
+    "feijao preto": { c: 14, p: 4.5, f: 0.5, kcal: 77, unit: "Feijão Preto (Cozido) - 100g", approx: { colher: 20, concha: 140 } },
+    
+    // ==================== FRUTAS ====================
+    "maca": { c: 19.1, p: 0.3, f: 0.2, kcal: 72, unit: "Maçã Fuji (1 Média) - 130g", approx: { unidade: 130, media: 130 } },
+    "maçã": { c: 19.1, p: 0.3, f: 0.2, kcal: 72, unit: "Maçã Fuji (1 Média) - 130g", approx: { unidade: 130, media: 130 } },
+    "1 maca": { c: 19.1, p: 0.3, f: 0.2, kcal: 72, unit: "Maçã Fuji (1 Média) - 130g", approx: { unidade: 130 } },
+    "maca 100g": { c: 14, p: 0.3, f: 0.2, kcal: 52, unit: "Maçã - 100g", approx: { pedaco: 100 } },
+    "banana": { c: 18, p: 0.9, f: 0.2, kcal: 68, unit: "Banana Prata (1 Média) - 70g", approx: { unidade: 70, media: 70 } },
+    "1 banana": { c: 18, p: 0.9, f: 0.2, kcal: 68, unit: "Banana Prata (1 Média) - 70g", approx: { unidade: 70 } },
+    "banana prata": { c: 18, p: 0.9, f: 0.2, kcal: 68, unit: "Banana Prata (1 Média) - 70g", approx: { unidade: 70 } },
+    "pessego": { c: 10, p: 0.9, f: 0.3, kcal: 39, unit: "Pêssego (1 Médio) - 100g", approx: { unidade: 100 } },
+    "pêssego": { c: 10, p: 0.9, f: 0.3, kcal: 39, unit: "Pêssego (1 Médio) - 100g", approx: { unidade: 100 } },
+    "1 pessego": { c: 10, p: 0.9, f: 0.3, kcal: 39, unit: "Pêssego (1 Médio) - 100g", approx: { unidade: 100 } },
+    "mamao": { c: 15, p: 0.8, f: 0.2, kcal: 60, unit: "Mamão Papaya (Meio) - 140g", approx: { fatia: 100, colher: 40, meio: 140 } },
+    "mamão": { c: 15, p: 0.8, f: 0.2, kcal: 60, unit: "Mamão Papaya (Meio) - 140g", approx: { fatia: 100, colher: 40, meio: 140 } },
+    "meio mamao": { c: 15, p: 0.8, f: 0.2, kcal: 60, unit: "Mamão Papaya (Meio) - 140g", approx: { meio: 140 } },
+    
+    // Outras frutas comuns (mantendo da base antiga)
+    "morango": { c: 8, p: 0.7, f: 0.3, kcal: 32, unit: "Morango - 100g", approx: { unidade: 15, xicara: 150 } },
+    "abacate": { c: 9, p: 2, f: 15, kcal: 160, unit: "Abacate - 100g", approx: { colher: 30, unidade: 200 } },
+    "melancia": { c: 8, p: 0.6, f: 0.2, kcal: 30, unit: "Melancia - 100g", approx: { fatia: 200, pedaco: 100 } },
+    "laranja": { c: 12, p: 0.9, f: 0.1, kcal: 47, unit: "Laranja - 100g", approx: { unidade: 130, media: 130 } },
+    
+    // ==================== GORDURAS ====================
+    "azeite": { c: 0, p: 0, f: 13.5, kcal: 119, unit: "Azeite de Oliva (1 Colher Sopa) - 13ml", approx: { colher: 13, fio: 5 } },
+    "1 colher azeite": { c: 0, p: 0, f: 13.5, kcal: 119, unit: "Azeite de Oliva (1 Colher Sopa) - 13ml", approx: { colher: 13 } },
+    "azeite colher": { c: 0, p: 0, f: 13.5, kcal: 119, unit: "Azeite de Oliva (1 Colher Sopa) - 13ml", approx: { colher: 13 } },
+    "manteiga": { c: 0, p: 0, f: 4.1, kcal: 37, unit: "Manteiga (Ponta de Faca) - 5g", approx: { ponta: 5, colher: 10 } },
+    "ponta de faca manteiga": { c: 0, p: 0, f: 4.1, kcal: 37, unit: "Manteiga (Ponta de Faca) - 5g", approx: { ponta: 5 } },
+    "pasta de amendoim": { c: 3, p: 4, f: 8, kcal: 90, unit: "Pasta de Amendoim (1 Colher) - 15g", approx: { colher: 15 } },
+    "pasta amendoim": { c: 3, p: 4, f: 8, kcal: 90, unit: "Pasta de Amendoim (1 Colher) - 15g", approx: { colher: 15 } },
+    "1 colher pasta amendoim": { c: 3, p: 4, f: 8, kcal: 90, unit: "Pasta de Amendoim (1 Colher) - 15g", approx: { colher: 15 } },
+    
+    // Óleo (100g para cálculos)
+    "oleo": { c: 0, p: 0, f: 100, kcal: 884, unit: "Óleo de Cozinha - 100g", approx: { colher: 12, fio: 5 } },
+    "óleo": { c: 0, p: 0, f: 100, kcal: 884, unit: "Óleo de Cozinha - 100g", approx: { colher: 12, fio: 5 } },
+    
+    // ==================== VEGETAIS (Baixa Caloria - Mantendo alguns) ====================
+    "brocolis": { c: 7, p: 2.8, f: 0.4, kcal: 34, unit: "Brócolis (Cozido) - 100g", approx: { ramo: 50, colher: 30 } },
+    "brócolis": { c: 7, p: 2.8, f: 0.4, kcal: 34, unit: "Brócolis (Cozido) - 100g", approx: { ramo: 50, colher: 30 } },
+    "couve": { c: 9, p: 4.3, f: 0.9, kcal: 49, unit: "Couve (Crua) - 100g", approx: { folha: 30, colher: 20 } },
+    "alface": { c: 2.9, p: 1.4, f: 0.2, kcal: 15, unit: "Alface - 100g", approx: { folha: 20, prato: 50 } },
+    "tomate": { c: 3.9, p: 0.9, f: 0.2, kcal: 18, unit: "Tomate - 100g", approx: { unidade: 100, rodela: 20 } },
+    "cenoura": { c: 10, p: 0.9, f: 0.2, kcal: 41, unit: "Cenoura (Crua) - 100g", approx: { unidade: 80, rodela: 10 } },
+    "abobrinha": { c: 3.1, p: 1.2, f: 0.3, kcal: 17, unit: "Abobrinha (Cozida) - 100g", approx: { unidade: 150, rodela: 20 } },
+    
+    // ==================== BEBIDAS ====================
+    "cafe": { c: 0, p: 0.1, f: 0, kcal: 2, unit: "Café (Sem Açúcar) - 100g", approx: { xicara: 50, colher: 15 } },
+    "café": { c: 0, p: 0.1, f: 0, kcal: 2, unit: "Café (Sem Açúcar) - 100g", approx: { xicara: 50, colher: 15 } },
+    "agua de coco": { c: 3.7, p: 0.7, f: 0.2, kcal: 19, unit: "Água de Coco - 100g", approx: { copo: 200, caixinha: 330 } },
+    "água de coco": { c: 3.7, p: 0.7, f: 0.2, kcal: 19, unit: "Água de Coco - 100g", approx: { copo: 200, caixinha: 330 } },
+    "monster": { c: 2, p: 0, f: 0, kcal: 10, unit: "Monster Zero (Lata) - 100g", approx: { lata: 1, unidade: 1 } },
+    "monster zero": { c: 2, p: 0, f: 0, kcal: 10, unit: "Monster Zero (Lata) - 100g", approx: { lata: 1, unidade: 1 } },
+    "refrigerante zero": { c: 0, p: 0, f: 0, kcal: 0, unit: "Refrigerante Zero - 100g", approx: { copo: 200, lata: 350 } }
+};
+
+
+        // --- FIREBASE SETUP ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBfy01I69nNCABxnYSqK95e8TwGP1bSv2w",
+            authDomain: "irontracks-e6344.firebaseapp.com",
+            projectId: "irontracks-e6344",
+            storageBucket: "irontracks-e6344.firebasestorage.app",
+            messagingSenderId: "212508580918",
+            appId: "1:212508580918:web:dd55c3088fec86b8680c97"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+        const appId = "macromixer-prod";
+        
+        // ==================== PERFORMANCE ====================
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function throttle(func, limit) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        // ==================== SEGURANÇA ====================
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') return input;
+            return input.replace(/[<>]/g, '').trim().substring(0, 1000); // Limita a 1000 chars
+        }
+
+        function validateNumber(value, min, max) {
+            const num = parseFloat(value);
+            if (isNaN(num) || num < min || num > max) return null;
+            return num;
+        }
+
+        function validateWeight(weight) {
+            return validateNumber(weight, 30, 300); // 30kg - 300kg
+        }
+
+        function validateCalories(cals) {
+            return validateNumber(cals, 500, 10000); // 500 - 10000 kcal
+        }
+
+        function validateMacros(value) {
+            return validateNumber(value, 0, 1000); // 0 - 1000g
+        }
+
+        // Variáveis globais
+        let currentUser = null;
+        let useLocalStorage = false;
+        let userSettings = { cals: 2100, prot: 240, carb: 180, fat: 45, weight: 93, wheyDose: 30, wheyProt: 24 }; 
+        let dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
+        let tempMealAnalysis = null;
+        let currentViewDate = new Date();
+        let weeklyChart = null;
+        let notificationSettings = { breakfast: { time: '08:00', enabled: false }, lunch: { time: '12:00', enabled: false }, dinner: { time: '19:00', enabled: false } };
+        let notificationIntervals = [];
+        let waterGoal = 3000; // Meta padrão: 3L
+        let isDarkMode = true; // Tema padrão: escuro
+        let weightHistory = []; // Histórico de peso
+        let weightChart = null; // Gráfico de peso
+        let currentMealPhoto = null; // Foto temporária da refeição
+
+        // --- AUTH COM GOOGLE ---
+        const handleLogin = async () => {
+            console.log('🔵 Botão Entrar clicado!');
+            console.log('Auth object:', auth);
+            console.log('Google Provider:', googleProvider);
+            
+            try {
+                console.log('Tentando abrir popup do Google...');
+                const result = await signInWithPopup(auth, googleProvider);
+                console.log('✅ Login bem-sucedido!', result.user);
+            } catch (error) {
+                console.error('❌ Erro no login:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                if (error.code === 'auth/unauthorized-domain') {
+                    alert(`⚠️ DOMÍNIO NÃO AUTORIZADO\n\nO domínio "${window.location.hostname}" não está autorizado no Firebase.\n\nPara corrigir:\n1. Acesse: console.firebase.google.com\n2. Vá em Authentication > Settings > Authorized domains\n3. Adicione: ${window.location.hostname}\n4. Salve e tente novamente`);
+                } else if (error.code === 'auth/popup-blocked') {
+                    alert('⚠️ POPUP BLOQUEADO\n\nSeu navegador bloqueou o popup de login.\nPermita popups para este site e tente novamente.');
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    console.log('Usuário fechou o popup');
+                } else {
+                    alert(`Erro ao fazer login: ${error.message}`);
+                }
+            }
+        };
+
+        const handleLogout = async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error('Erro no logout:', error);
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            console.log('🔄 onAuthStateChanged disparado');
+            console.log('User:', user);
+            
+            if (user) {
+                console.log('✅ Usuário logado:', user.displayName || user.email);
+                console.log('UID:', user.uid);
+                currentUser = user;
+                useLocalStorage = false;
+                
+                // Atualiza UI
+                const btnLogin = document.getElementById('btn-login');
+                const userStatus = document.getElementById('user-status');
+                const usernameDisplay = document.getElementById('username-display');
+                
+                if (btnLogin) btnLogin.classList.add('hidden');
+                if (userStatus) {
+                    userStatus.classList.remove('hidden');
+                    userStatus.classList.add('flex');
+                }
+                if (usernameDisplay) {
+                    usernameDisplay.innerText = user.displayName || user.email || 'Usuário';
+                }
+                
+                console.log('UI atualizada - mostrando status do usuário');
+                
+                // Carrega dados do Firebase
+                console.log('Carregando dados do Firebase...');
+                loadUserSettings();
+                loadDailyLog();
+                loadNotificationSettings();
+            } else {
+                console.log('❌ Usuário não logado');
+                currentUser = null;
+                useLocalStorage = false;
+                
+                // Atualiza UI
+                const btnLogin = document.getElementById('btn-login');
+                const userStatus = document.getElementById('user-status');
+                
+                if (btnLogin) {
+                    btnLogin.classList.remove('hidden');
+                    btnLogin.classList.add('flex');
+                }
+                if (userStatus) {
+                    userStatus.classList.add('hidden');
+                    userStatus.classList.remove('flex');
+                }
+                
+                console.log('UI atualizada - mostrando botão de login');
+            }
+        });
+
+        function initAuth() {
+            console.log('=== MacroMixer v1.2 - Com Google Auth ===');
+            console.log('Firebase Auth:', auth);
+            console.log('Verificando elementos...');
+            console.log('btn-login existe?', document.getElementById('btn-login'));
+            console.log('btn-logout existe?', document.getElementById('btn-logout'));
+        }
+
+        // --- PRESETS DR CARLOS ---
+        window.applyPreset = (type) => {
+            const presets = {
+                'A': { cals: 2100, prot: 240, carb: 180, fat: 45 }, // Massacre
+                'B': { cals: 1750, prot: 260, carb: 60, fat: 55 }  // Vacuo
+            };
+            
+            const p = presets[type];
+            document.getElementById('goal-cals').value = p.cals;
+            document.getElementById('goal-prot').value = p.prot;
+            document.getElementById('goal-carb').value = p.carb;
+            document.getElementById('goal-fat').value = p.fat;
+            
+            alert(`Preset ${type === 'A' ? 'MASSACRE' : 'VÁCUO'} carregado. Clique em salvar.`);
+        };
+
+        // --- LOCAL STORAGE FUNCTIONS ---
+        function saveToLocalStorage(key, data) {
+            localStorage.setItem(`macromixer_${key}`, JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage(key, defaultValue = null) {
+            const data = localStorage.getItem(`macromixer_${key}`);
+            return data ? JSON.parse(data) : defaultValue;
+        }
+
+        function loadUserSettingsLocal() {
+            const saved = loadFromLocalStorage('settings');
+            if (saved) {
+                userSettings = { ...userSettings, ...saved };
+                updateUIInputs();
+                updateDashboard();
+                document.getElementById('goals-section').classList.add('hidden');
+            } else {
+                document.getElementById('goals-section').classList.remove('hidden');
+            }
+        }
+
+        function saveUserSettingsLocal(newSettings) {
+            userSettings = newSettings;
+            saveToLocalStorage('settings', newSettings);
+            localStorage.setItem('macromixer_offline_mode', 'true');
+            updateUIInputs();
+            updateDashboard();
+        }
+
+        function loadDailyLogLocal() {
+            const dateStr = currentViewDate.toISOString().split('T')[0];
+            const saved = loadFromLocalStorage(`log_${dateStr}`);
+            if (saved) {
+                dailyLog = saved;
+                if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+                if (!dailyLog.water) dailyLog.water = 0;
+            } else {
+                dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
+            }
+            renderLogs();
+            updateDashboard();
+            
+            const today = new Date();
+            if (currentViewDate.toDateString() === today.toDateString()) {
+                analyzeContext();
+            }
+        }
+
+        function saveDailyLogLocal() {
+            const dateStr = currentViewDate.toISOString().split('T')[0];
+            saveToLocalStorage(`log_${dateStr}`, dailyLog);
+        }
+
+        async function loadWeeklyDataLocal() {
+            const weekData = [];
+            const today = new Date();
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const saved = loadFromLocalStorage(`log_${dateStr}`);
+                
+                if (saved) {
+                    weekData.push({
+                        date: dateStr,
+                        label: date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }),
+                        total: saved.total || { cals: 0, prot: 0, carb: 0, fat: 0 }
+                    });
+                } else {
+                    weekData.push({
+                        date: dateStr,
+                        label: date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }),
+                        total: { cals: 0, prot: 0, carb: 0, fat: 0 }
+                    });
+                }
+            }
+            
+            return weekData;
+        }
+
+        function loadNotificationSettingsLocal() {
+            const saved = loadFromLocalStorage('notifications');
+            if (saved) {
+                notificationSettings = saved;
+                updateNotificationUI();
+            }
+        }
+
+        function saveNotificationSettingsLocal(settings) {
+            notificationSettings = settings;
+            saveToLocalStorage('notifications', settings);
+        }
+
+        // --- DATABASE OPS ---
+        function resetUIState() {
+             userSettings = { cals: 2100, prot: 240, carb: 180, fat: 45, weight: 93, wheyDose: 30, wheyProt: 24 };
+             dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
+             updateUIInputs();
+             updateDashboard();
+             renderLogs();
+             if(unsubscribeSettings) unsubscribeSettings();
+             if(unsubscribeLogs) unsubscribeLogs();
+        }
+
+        // Funções com Firebase
+        async function loadUserSettings() {
+            if (!currentUser) return;
+            const docRef = doc(db, 'users', currentUser.uid, 'settings', 'goals');
+            
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    userSettings = { ...userSettings, ...data };
+                    updateUIInputs();
+                    updateDashboard();
+                    document.getElementById('goals-section').classList.add('hidden');
+                } else {
+                    document.getElementById('goals-section').classList.remove('hidden');
+                }
+            });
+        }
+
+        async function saveUserSettings(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            // Validação de segurança
+            const weight = validateWeight(document.getElementById('user-weight').value);
+            const wheyDose = validateNumber(document.getElementById('whey-dose').value, 10, 100);
+            const wheyProt = validateNumber(document.getElementById('whey-prot').value, 5, 50);
+            const cals = validateCalories(document.getElementById('goal-cals').value);
+            const prot = validateMacros(document.getElementById('goal-prot').value);
+            const carb = validateMacros(document.getElementById('goal-carb').value);
+            const fat = validateMacros(document.getElementById('goal-fat').value);
+
+            if (!weight || !wheyDose || !wheyProt || !cals || !prot || !carb || !fat) {
+                alert('⚠️ Valores inválidos! Verifique os campos e tente novamente.');
+                return;
+            }
+
+            const newSettings = {
+                weight: weight,
+                wheyDose: wheyDose,
+                wheyProt: wheyProt,
+                cals: cals,
+                prot: prot,
+                carb: carb,
+                fat: fat
+            };
+
+            const docRef = doc(db, 'users', currentUser.uid, 'settings', 'goals');
+            await setDoc(docRef, newSettings);
+            
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "CALIBRADO!";
+            btn.classList.add('bg-green-600');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('bg-green-600');
+                document.getElementById('goals-section').classList.add('hidden');
+            }, 1000);
+        }
+
+        // Funções com Firebase
+        async function loadDailyLog() {
+            if (!currentUser) return;
+            const todayStr = new Date().toISOString().split('T')[0];
+            const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    dailyLog = docSnap.data();
+                    if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+                    if (!dailyLog.water) dailyLog.water = 0;
+                } else {
+                    dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
+                }
+                renderLogs();
+                updateDashboard();
+                updateWaterDisplay();
+                analyzeContext();
+            });
+        }
+
+        async function pushMealToDB() {
+            if (!currentUser || !tempMealAnalysis) return;
+
+            const newTotal = {
+                cals: dailyLog.total.cals + tempMealAnalysis.totals.kcal,
+                prot: dailyLog.total.prot + tempMealAnalysis.totals.p,
+                carb: dailyLog.total.carb + tempMealAnalysis.totals.c,
+                fat: dailyLog.total.fat + tempMealAnalysis.totals.f
+            };
+
+            const mealEntry = {
+                name: tempMealAnalysis.mealName || "Refeição",
+                timestamp: new Date().toISOString(),
+                foods: tempMealAnalysis.foods,
+                totals: tempMealAnalysis.totals,
+                isApproximate: tempMealAnalysis.isApproximate,
+                photo: currentMealPhoto || null
+            };
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+            
+            if (dailyLog.items.length === 0) {
+                await setDoc(docRef, { items: [mealEntry], total: newTotal });
+            } else {
+                await updateDoc(docRef, { items: arrayUnion(mealEntry), total: newTotal });
+            }
+                
+            document.getElementById('meal-input').value = "";
+            document.getElementById('modal-result').classList.add('hidden');
+            removePhoto(); // Limpa foto após salvar
+        }
+        
+        async function resetDay() {
+            if (!currentUser) return;
+            if(!confirm("Limpar todo o histórico de hoje?")) return;
+            
+            const todayStr = new Date().toISOString().split('T')[0];
+            const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+            await setDoc(docRef, { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }});
+        }
+
+        // --- NEW PARSER (DR CARLOS UNITS & WHEY CONFIG) ---
+
+        function parseInput(text) {
+            const lines = text.split('\n');
+            const detectedFoods = [];
+            let mealName = "Refeição";
+            let totals = { p:0, c:0, f:0, kcal:0 };
+            let isApproximate = false;
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                if (!line) return;
+                
+                if (index === 0 && !/\d/.test(line)) {
+                    mealName = line;
+                    return;
+                }
+                
+                let qtd = 0;
+                let foodName = "";
+                let unitUsed = "g";
+                let matchedItem = null;
+                let multiplier = 0;
+                let wasApprox = false;
+
+                const approxRegex = /(\d+)\s*(colheres?|conchas?|bifes?|fatias?|pedacos?|latas?|scoops?|unidades?|ovos?)/i;
+                const gramRegex = /(\d+)\s*(g|ml)?/i;
+                
+                const approxMatch = line.match(approxRegex);
+                const gramMatch = line.match(gramRegex);
+
+                if (approxMatch) {
+                    qtd = parseInt(approxMatch[1]);
+                    let unitRaw = approxMatch[2].toLowerCase();
+                    if(unitRaw.startsWith('colher')) unitUsed = 'colher';
+                    else if(unitRaw.startsWith('concha')) unitUsed = 'concha';
+                    else if(unitRaw.startsWith('bife')) unitUsed = 'bife';
+                    else if(unitRaw.startsWith('fatia')) unitUsed = 'fatia';
+                    else if(unitRaw.startsWith('pedaco')) unitUsed = 'pedaco';
+                    else if(unitRaw.startsWith('lata')) unitUsed = 'lata';
+                    else if(unitRaw.startsWith('scoop')) unitUsed = 'scoop';
+                    else if(unitRaw.startsWith('ovo')) unitUsed = 'unidade';
+                    else unitUsed = 'unidade';
+
+                    foodName = line.replace(approxMatch[0], "").replace(" de ", " ").trim().toLowerCase();
+                    wasApprox = true;
+                } else if (gramMatch) {
+                    qtd = parseInt(gramMatch[1]);
+                    unitUsed = 'g';
+                    foodName = line.replace(gramMatch[0], "").replace(" de ", " ").trim().toLowerCase();
+                } else {
+                    foodName = line.toLowerCase();
+                    qtd = 1; 
+                }
+
+                // DB Search
+                let dbKeyMatched = "";
+                for (const key in foodDatabase) {
+                    if (foodName.includes(key)) {
+                        if (!dbKeyMatched || key.length > dbKeyMatched.length) {
+                            dbKeyMatched = key;
+                            matchedItem = foodDatabase[key];
+                        }
+                    }
+                }
+
+                if (matchedItem) {
+                    // --- WHEY PROTEIN SPECIAL LOGIC ---
+                    if (dbKeyMatched.includes('whey')) {
+                        // User Config com validação
+                        let customDose = userSettings.wheyDose || 30;
+                        let customProt = userSettings.wheyProt || 24;
+                        
+                        // Validação: evita divisão por zero
+                        if (customDose <= 0) {
+                            console.error("Dose de whey inválida, usando padrão");
+                            customDose = 30;
+                            customProt = 24;
+                        }
+                        
+                        const pRatio = customProt / customDose;
+                        
+                        // Approx Calories for Whey (Usually ~4kcal/g of protein + small leftover)
+                        // Or we can scale database kcal/100g. 
+                        // Database whey is ~400kcal/100g (standard powder). 
+                        // Let's use database values for non-protein macros scaled by weight, but OVERRIDE protein.
+                        
+                        let weightInGrams = 0;
+                        
+                        if (wasApprox) {
+                            isApproximate = true;
+                            // Check if unit is scoop or colher
+                            if(matchedItem.approx && matchedItem.approx[unitUsed]) {
+                                weightInGrams = qtd * matchedItem.approx[unitUsed];
+                                unitUsed = `${unitUsed} (~${weightInGrams}g)`;
+                            } else {
+                                weightInGrams = qtd * 30; // default scoop assumption
+                                unitUsed = "scoop/dose est. (30g)";
+                            }
+                        } else {
+                            // Direct grams (e.g. "40g whey")
+                            weightInGrams = qtd;
+                        }
+
+                        // Calculate Macros based on custom protein config
+                        const p = Math.round(weightInGrams * pRatio);
+                        
+                        // For C and F, assume standard ratios from DB (per 100g) scaled to weight
+                        const c = Math.round((matchedItem.c / 100) * weightInGrams);
+                        const f = Math.round((matchedItem.f / 100) * weightInGrams);
+                        // Kcal = P*4 + C*4 + F*9 approx
+                        const kcal = (p * 4) + (c * 4) + (f * 9);
+
+                        totals.p += p; totals.c += c; totals.f += f; totals.kcal += kcal;
+
+                        detectedFoods.push({
+                            name: matchedItem.unit,
+                            rawName: foodName,
+                            qtd: qtd,
+                            unitDisplay: unitUsed,
+                            macros: { p, c, f, kcal }
+                        });
+                    } 
+                    else {
+                        // --- STANDARD LOGIC ---
+                        if (wasApprox) {
+                            isApproximate = true;
+                            if (matchedItem.approx && matchedItem.approx[unitUsed]) {
+                                const gramsPerUnit = matchedItem.approx[unitUsed];
+                                const totalGrams = qtd * gramsPerUnit;
+                                multiplier = totalGrams / 100;
+                                unitUsed = `${unitUsed} (~${gramsPerUnit}g)`;
+                            } else if (matchedItem.approx && matchedItem.approx['unidade']) {
+                                const gramsPerUnit = matchedItem.approx['unidade'];
+                                multiplier = (qtd * gramsPerUnit) / 100;
+                                unitUsed = `unidade estim. (~${gramsPerUnit}g)`;
+                            } else {
+                                multiplier = (qtd * 50) / 100;
+                                unitUsed = "unidade (estimado)";
+                            }
+                        } else {
+                            // Gramas diretas - sempre dividir por 100 para normalizar
+                            multiplier = qtd / 100;
+                        }
+
+                        const p = Math.round(matchedItem.p * multiplier);
+                        const c = Math.round(matchedItem.c * multiplier);
+                        const f = Math.round(matchedItem.f * multiplier);
+                        const kcal = Math.round(matchedItem.kcal * multiplier);
+
+                        totals.p += p; totals.c += c; totals.f += f; totals.kcal += kcal;
+
+                        detectedFoods.push({
+                            name: matchedItem.unit,
+                            rawName: foodName,
+                            qtd: qtd,
+                            unitDisplay: unitUsed,
+                            macros: { p, c, f, kcal }
+                        });
+                    }
+                } else {
+                     detectedFoods.push({
+                        name: "Desconhecido (" + line + ")",
+                        rawName: line,
+                        qtd: 0,
+                        unitDisplay: "?",
+                        macros: { p:0, c:0, f:0, kcal:0 },
+                        error: true
+                    });
+                }
+            });
+
+            return { mealName, foods: detectedFoods, totals, isApproximate };
+        }
+
+        function handleCalculate() {
+            const text = sanitizeInput(document.getElementById('meal-input').value);
+            if (!text.trim()) return;
+
+            tempMealAnalysis = parseInput(text);
+            
+            const container = document.getElementById('modal-content');
+            container.innerHTML = '';
+
+            const warningEl = document.getElementById('accuracy-warning');
+            if (tempMealAnalysis.isApproximate) warningEl.classList.remove('hidden');
+            else warningEl.classList.add('hidden');
+
+            const header = document.createElement('div');
+            header.className = "bg-slate-900 rounded p-3 mb-4 text-center border border-slate-700";
+            header.innerHTML = `
+                <div class="text-xl font-bold text-white">${tempMealAnalysis.mealName}</div>
+                <div class="flex justify-center gap-4 mt-2 text-sm">
+                    <span class="text-purple-400 font-bold">${tempMealAnalysis.totals.kcal} kcal</span>
+                    <span class="text-green-400 font-mono">P:${tempMealAnalysis.totals.p}</span>
+                    <span class="text-blue-400 font-mono">C:${tempMealAnalysis.totals.c}</span>
+                    <span class="text-yellow-400 font-mono">G:${tempMealAnalysis.totals.f}</span>
+                </div>
+            `;
+            container.appendChild(header);
+
+            tempMealAnalysis.foods.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center py-2 border-b border-slate-700 last:border-0";
+                if (item.error) {
+                    row.innerHTML = `<div class="text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>${item.rawName} <span class="text-xs opacity-70">(Não encontrado)</span></div>`;
+                } else {
+                    row.innerHTML = `
+                        <div>
+                            <div class="text-gray-200 font-medium text-sm">${item.name}</div>
+                            <div class="text-xs text-cyan-500">${item.qtd} ${item.unitDisplay}</div>
+                        </div>
+                        <div class="text-right text-xs text-gray-400 font-mono">
+                            <div>${item.macros.kcal} kcal</div>
+                            <div class="flex gap-1">
+                                <span class="text-green-600">P:${item.macros.p}</span>
+                                <span class="text-blue-600">C:${item.macros.c}</span>
+                                <span class="text-yellow-600">G:${item.macros.f}</span>
+                            </div>
+                        </div>`;
+                }
+                container.appendChild(row);
+            });
+            document.getElementById('modal-result').classList.remove('hidden');
+        }
+
+        function updateUIInputs() {
+            document.getElementById('user-weight').value = userSettings.weight;
+            document.getElementById('whey-dose').value = userSettings.wheyDose;
+            document.getElementById('whey-prot').value = userSettings.wheyProt;
+            document.getElementById('goal-cals').value = userSettings.cals;
+            document.getElementById('goal-prot').value = userSettings.prot;
+            document.getElementById('goal-carb').value = userSettings.carb;
+            document.getElementById('goal-fat').value = userSettings.fat;
+            
+            document.getElementById('target-cals').innerText = userSettings.cals;
+            document.getElementById('target-prot').innerText = userSettings.prot;
+            document.getElementById('target-carb').innerText = userSettings.carb;
+            document.getElementById('target-fat').innerText = userSettings.fat;
+        }
+
+        const updateDashboard = throttle(function() {
+            const t = dailyLog.total;
+            const g = userSettings;
+            
+            document.getElementById('display-cals').innerText = t.cals;
+            document.getElementById('display-prot').innerText = t.prot;
+            document.getElementById('display-carb').innerText = t.carb;
+            document.getElementById('display-fat').innerText = t.fat;
+
+            const balance = g.cals - t.cals;
+            document.getElementById('saldo-cals').innerText = `BUFFER: ${balance}`;
+            
+            setBar('bar-cals', t.cals, g.cals);
+            setBar('bar-prot', t.prot, g.prot);
+            setBar('bar-carb', t.carb, g.carb);
+            setBar('bar-fat', t.fat, g.fat);
+        }, 100); // Throttle de 100ms
+
+        function setBar(id, val, max) {
+            const pct = Math.min(100, Math.max(0, (val / max) * 100));
+            const el = document.getElementById(id);
+            if (id === 'bar-cals') el.style.width = `${pct}%`;
+            else el.style.height = `${pct}%`;
+            if (val > max) el.classList.add('bg-red-500'); else el.classList.remove('bg-red-500');
+        }
+
+        // ==================== CONTADOR DE ÁGUA ====================
+        function addWater(amount) {
+            console.log('🚰 addWater chamado:', amount);
+            if (!dailyLog.water) dailyLog.water = 0;
+            dailyLog.water += amount;
+            console.log('💧 Água total:', dailyLog.water);
+            updateWaterDisplay();
+            saveWaterToFirebase();
+        }
+
+        function updateWaterDisplay() {
+            const current = dailyLog.water || 0;
+            const goal = waterGoal;
+            const percentage = Math.min(100, (current / goal) * 100);
+            
+            document.getElementById('water-current').innerText = current;
+            document.getElementById('water-goal').innerText = goal;
+            document.getElementById('water-bar').style.width = percentage + '%';
+            
+            // Status message
+            const statusEl = document.getElementById('water-status');
+            if (percentage >= 100) {
+                statusEl.innerHTML = '<i class="fa-solid fa-check-circle mr-1 text-green-400"></i><span class="text-green-400">Meta atingida! 🎉</span>';
+            } else if (percentage >= 75) {
+                statusEl.innerHTML = '<i class="fa-solid fa-thumbs-up mr-1 text-blue-400"></i><span class="text-blue-400">Ótimo progresso!</span>';
+            } else if (percentage >= 50) {
+                statusEl.innerHTML = '<i class="fa-solid fa-droplet mr-1 text-cyan-400"></i><span class="text-cyan-400">Continue assim!</span>';
+            } else if (percentage >= 25) {
+                statusEl.innerHTML = '<i class="fa-solid fa-info-circle mr-1 text-yellow-400"></i><span class="text-yellow-400">Beba mais água!</span>';
+            } else {
+                statusEl.innerHTML = '<i class="fa-solid fa-exclamation-triangle mr-1 text-orange-400"></i><span class="text-orange-400">Hidrate-se!</span>';
+            }
+        }
+
+        async function saveWaterToFirebase() {
+            console.log('💾 saveWaterToFirebase chamado');
+            console.log('👤 currentUser:', currentUser ? currentUser.uid : 'null');
+            console.log('📦 useLocalStorage:', useLocalStorage);
+            console.log('💧 dailyLog.water:', dailyLog.water);
+            
+            if (!currentUser || useLocalStorage) {
+                const todayStr = new Date().toISOString().split('T')[0];
+                localStorage.setItem('macromixer_water_' + todayStr, dailyLog.water.toString());
+                console.log('✅ Água salva no localStorage:', todayStr, dailyLog.water);
+                return;
+            }
+            
+            try {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+                
+                console.log('🔥 Salvando no Firebase:', todayStr, dailyLog.water);
+                // Usa setDoc com merge para criar ou atualizar
+                await setDoc(docRef, { water: dailyLog.water }, { merge: true });
+                console.log('✅ Água salva no Firebase com sucesso!');
+            } catch (error) {
+                console.error('❌ Erro ao salvar água no Firebase:', error);
+                // Fallback para localStorage se falhar
+                const todayStr = new Date().toISOString().split('T')[0];
+                localStorage.setItem('macromixer_water_' + todayStr, dailyLog.water.toString());
+                console.log('✅ Água salva no localStorage (fallback):', todayStr, dailyLog.water);
+            }
+        }
+
+        function resetWater() {
+            if (confirm('Resetar contador de água?')) {
+                dailyLog.water = 0;
+                updateWaterDisplay();
+                saveWaterToFirebase();
+            }
+        }
+
+        // ==================== COPIAR DIA ANTERIOR ====================
+        async function copyYesterday() {
+            if (!confirm('Copiar todas as refeições de ontem para hoje?')) return;
+            
+            try {
+                // Calcula data de ontem
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                
+                let yesterdayLog;
+                
+                if (!currentUser || useLocalStorage) {
+                    // Modo local
+                    const stored = localStorage.getItem('macromixer_log_' + yesterdayStr);
+                    if (!stored) {
+                        alert('Não há dados de ontem para copiar.');
+                        return;
+                    }
+                    yesterdayLog = JSON.parse(stored);
+                } else {
+                    // Modo Firebase
+                    const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', yesterdayStr);
+                    const docSnap = await getDoc(docRef);
+                    
+                    if (!docSnap.exists()) {
+                        alert('Não há dados de ontem para copiar.');
+                        return;
+                    }
+                    yesterdayLog = docSnap.data();
+                }
+                
+                if (!yesterdayLog.items || yesterdayLog.items.length === 0) {
+                    alert('Ontem não há refeições registradas.');
+                    return;
+                }
+                
+                // Copia os items
+                for (const item of yesterdayLog.items) {
+                    dailyLog.items.push({...item, timestamp: new Date().toISOString()});
+                }
+                
+                // Recalcula totais
+                recalculateTotals();
+                
+                // Salva
+                if (!currentUser || useLocalStorage) {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    localStorage.setItem('macromixer_log_' + todayStr, JSON.stringify(dailyLog));
+                } else {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+                    await setDoc(docRef, dailyLog);
+                }
+                
+                // Atualiza UI
+                renderLogs();
+                updateDashboard();
+                analyzeContext();
+                
+                alert(`✅ ${yesterdayLog.items.length} refeições copiadas com sucesso!`);
+            } catch (error) {
+                console.error('Erro ao copiar dia anterior:', error);
+                alert('Erro ao copiar refeições. Tente novamente.');
+            }
+        }
+
+        function recalculateTotals() {
+            dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+            for (const item of dailyLog.items) {
+                dailyLog.total.cals += item.cals || 0;
+                dailyLog.total.prot += item.prot || 0;
+                dailyLog.total.carb += item.carb || 0;
+                dailyLog.total.fat += item.fat || 0;
+            }
+        }
+
+        // ==================== MODO ESCURO/CLARO ====================
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('light-mode', !isDarkMode);
+            
+            const icon = document.getElementById('theme-icon');
+            if (isDarkMode) {
+                icon.className = 'fa-solid fa-moon';
+            } else {
+                icon.className = 'fa-solid fa-sun';
+            }
+            
+            // Salva preferência
+            localStorage.setItem('macromixer_theme', isDarkMode ? 'dark' : 'light');
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('macromixer_theme');
+            if (savedTheme === 'light') {
+                isDarkMode = false;
+                document.body.classList.add('light-mode');
+                document.getElementById('theme-icon').className = 'fa-solid fa-sun';
+            }
+        }
+
+        // ==================== REGISTRO DE PESO ====================
+        async function saveWeight() {
+            const weightInput = document.getElementById('weight-input');
+            const weight = parseFloat(weightInput.value);
+            
+            if (!weight || weight < 30 || weight > 300) {
+                alert('Por favor, insira um peso válido (30-300kg)');
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            const entry = { date: today, weight: weight };
+            
+            // Salva no Firebase ou localStorage
+            if (!currentUser || useLocalStorage) {
+                let history = JSON.parse(localStorage.getItem('macromixer_weight_history') || '[]');
+                // Remove entrada do mesmo dia se existir
+                history = history.filter(e => e.date !== today);
+                history.push(entry);
+                history.sort((a, b) => new Date(a.date) - new Date(b.date));
+                localStorage.setItem('macromixer_weight_history', JSON.stringify(history));
+                weightHistory = history;
+            } else {
+                try {
+                    const docRef = doc(db, 'users', currentUser.uid, 'weight_history', today);
+                    await setDoc(docRef, entry);
+                    await loadWeightHistory();
+                } catch (error) {
+                    console.error('Erro ao salvar peso:', error);
+                    alert('Erro ao salvar peso. Tente novamente.');
+                    return;
+                }
+            }
+            
+            weightInput.value = '';
+            updateWeightDisplay();
+            alert('✅ Peso registrado com sucesso!');
+        }
+
+        async function loadWeightHistory() {
+            if (!currentUser || useLocalStorage) {
+                weightHistory = JSON.parse(localStorage.getItem('macromixer_weight_history') || '[]');
+            } else {
+                try {
+                    const collectionRef = collection(db, 'users', currentUser.uid, 'weight_history');
+                    const querySnapshot = await getDocs(collectionRef);
+                    weightHistory = [];
+                    querySnapshot.forEach((doc) => {
+                        weightHistory.push(doc.data());
+                    });
+                    weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+                } catch (error) {
+                    console.error('Erro ao carregar histórico de peso:', error);
+                }
+            }
+            updateWeightDisplay();
+        }
+
+        function updateWeightDisplay() {
+            if (weightHistory.length === 0) {
+                document.getElementById('weight-info').innerHTML = '<i class="fa-solid fa-info-circle mr-1"></i>Registre seu peso diariamente';
+                return;
+            }
+            
+            const latest = weightHistory[weightHistory.length - 1];
+            const initial = weightHistory[0];
+            const diff = latest.weight - initial.weight;
+            
+            document.getElementById('weight-info').innerHTML = `<i class="fa-solid fa-check-circle mr-1 text-green-400"></i><span class="text-green-400">Último: ${latest.weight}kg em ${new Date(latest.date).toLocaleDateString('pt-BR')}</span>`;
+            
+            // Atualiza stats
+            document.getElementById('weight-initial').innerText = initial.weight + 'kg';
+            document.getElementById('weight-current').innerText = latest.weight + 'kg';
+            
+            const diffEl = document.getElementById('weight-diff');
+            if (diff > 0) {
+                diffEl.innerText = '+' + diff.toFixed(1) + 'kg';
+                diffEl.className = 'font-bold text-red-400';
+            } else if (diff < 0) {
+                diffEl.innerText = diff.toFixed(1) + 'kg';
+                diffEl.className = 'font-bold text-green-400';
+            } else {
+                diffEl.innerText = '0kg';
+                diffEl.className = 'font-bold text-slate-400';
+            }
+        }
+
+        function toggleWeightChart() {
+            const container = document.getElementById('weight-chart-container');
+            container.classList.toggle('hidden');
+            
+            if (!container.classList.contains('hidden')) {
+                renderWeightChart();
+            }
+        }
+
+        function renderWeightChart() {
+            if (weightHistory.length === 0) {
+                return;
+            }
+            
+            const ctx = document.getElementById('weight-chart').getContext('2d');
+            
+            if (weightChart) {
+                weightChart.destroy();
+            }
+            
+            const labels = weightHistory.map(e => new Date(e.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+            const data = weightHistory.map(e => e.weight);
+            
+            weightChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Peso (kg)',
+                        data: data,
+                        borderColor: 'rgb(168, 85, 247)',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'kg';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==================== FOTO DAS REFEIÇÕES ====================
+        function handlePhotoSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Limita tamanho (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Foto muito grande! Máximo 2MB.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentMealPhoto = e.target.result;
+                document.getElementById('photo-preview-img').src = currentMealPhoto;
+                document.getElementById('photo-preview').classList.remove('hidden');
+                document.getElementById('remove-photo-btn').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removePhoto() {
+            currentMealPhoto = null;
+            document.getElementById('photo-preview').classList.add('hidden');
+            document.getElementById('remove-photo-btn').classList.add('hidden');
+            document.getElementById('meal-photo-input').value = '';
+        }
+
+        function showMealPhoto(photoData) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="relative max-w-2xl w-full">
+                    <button class="absolute -top-10 right-0 text-white text-2xl hover:text-gray-300" onclick="this.closest('.fixed').remove()">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                    <img src="${photoData}" class="w-full rounded-lg shadow-2xl" />
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Fecha ao clicar fora
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('logs-container');
+            container.innerHTML = '';
+            if (!dailyLog.items || dailyLog.items.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-600 py-4 italic text-sm">Nenhuma refeição hoje.</div>';
+                return;
+            }
+            dailyLog.items.slice().reverse().forEach(log => {
+                const el = document.createElement('div');
+                // Proteção contra logs antigos sem isApproximate
+                const isApprox = log.isApproximate || false;
+                const borderClass = isApprox ? 'border-yellow-500' : 'border-cyan-500';
+                const bgClass = isApprox ? 'bg-yellow-900/10' : 'bg-slate-800/50';
+                el.className = `${bgClass} rounded-lg p-3 border-l-2 ${borderClass} flex justify-between items-center`;
+                
+                // Proteção contra foods undefined
+                const foodDesc = (log.foods && log.foods.length > 0) 
+                    ? log.foods.map(f => f.name.split(' ')[0]).join(', ')
+                    : 'Refeição';
+                    
+                const photoIcon = log.photo ? '<i class="fa-solid fa-camera text-cyan-400 text-[10px] ml-1" title="Com foto"></i>' : '';
+                el.innerHTML = `
+                    <div><div class="text-sm font-bold text-gray-200">${log.name || 'Refeição'} ${isApprox ? '<i class="fa-solid fa-triangle-exclamation text-yellow-500 text-[10px]" title="Aproximado"></i>' : ''}${photoIcon}</div><div class="text-xs text-gray-500 truncate w-40">${foodDesc}</div></div>
+                    <div class="text-right"><div class="text-sm font-bold text-white">${log.totals.kcal || 0} kcal</div><div class="text-[10px] text-gray-400 flex gap-2 font-mono"><span class="text-green-500">P:${log.totals.p || 0}</span><span class="text-blue-500">C:${log.totals.c || 0}</span><span class="text-yellow-500">G:${log.totals.f || 0}</span></div></div>`;
+                
+                // Se tiver foto, adiciona click para ver
+                if (log.photo) {
+                    el.style.cursor = 'pointer';
+                    el.addEventListener('click', () => showMealPhoto(log.photo));
+                }
+                
+                container.appendChild(el);
+            });
+        }
+
+        // --- DR CARLOS AI (VARIÁVEL) ---
+        function analyzeContext() {
+            const t = dailyLog.total;
+            const g = userSettings;
+            const weight = g.weight || 93;
+            const minProtein = weight * 2.5; 
+
+            const box = document.getElementById('suggestion-box');
+            const txt = document.getElementById('suggestion-text');
+            box.classList.remove('hidden');
+
+            const pctKcal = t.cals / g.cals;
+            
+            // Phrases DB
+            const phrases = {
+                catabolic: [
+                    "<b>ALERTA DE CATABOLISMO!</b> A proteína está baixa. O músculo não cresce com ar. Mande Whey ou Ovos agora.",
+                    "Você está brincando de fazer dieta? Proteína ridícula. Corrija isso antes de dormir ou perderá massa.",
+                    "Seu corpo está implorando por aminoácidos. A síntese proteica parou. Coma proteína IMEDIATAMENTE."
+                ],
+                overLimit: [
+                    "Meta calórica estourada. Pare de comer. O GH age no sono, não na digestão pesada.",
+                    "Você já passou do limite. Beba 1 litro de água e vá dormir. Amanhã o cardio será dobrado.",
+                    "Chega por hoje. Seu saldo acabou. Não transforme superávit em gordura visceral."
+                ],
+                massacreNeedCarb: [
+                    "Hoje é dia de <b>MASSACRE</b> e seu carbo está baixo. O treino vai falhar sem glicogênio. Carregue agora.",
+                    "Sem carbo, sem força. É dia de perna/costas? Coma arroz ou batata já.",
+                    "A insulina precisa subir pro treino render. O tanque está vazio. Encha de carbo limpo."
+                ],
+                onTrack: [
+                    `Protocolo em andamento. Você tem <b>${g.cals - t.cals} kcal</b> de buffer. Mantenha a disciplina.`,
+                    "Segue o plano. A constância é o segredo. Não erra.",
+                    "Engenharia metabólica funcionando. Tudo dentro dos parâmetros. Continue focado."
+                ]
+            };
+
+            const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+            // Logic Tree
+            if (t.prot < minProtein && pctKcal > 0.8) {
+                txt.innerHTML = getRandom(phrases.catabolic);
+                box.className = "bg-red-900/30 border-l-4 border-red-500 p-3 rounded text-sm text-red-200";
+            } else if (pctKcal > 1.05) {
+                txt.innerHTML = getRandom(phrases.overLimit);
+                box.className = "bg-red-900/30 border-l-4 border-red-500 p-3 rounded text-sm text-red-200";
+            } else if (g.carb > 150 && t.carb < 50 && pctKcal > 0.4) {
+                 txt.innerHTML = getRandom(phrases.massacreNeedCarb);
+                 box.className = "bg-blue-900/30 border-l-4 border-blue-500 p-3 rounded text-sm text-blue-200";
+            } else {
+                 txt.innerHTML = getRandom(phrases.onTrack);
+                 box.className = "bg-slate-800/50 border-l-4 border-cyan-500 p-3 rounded text-sm text-gray-300";
+            }
+        }
+
+        // --- MULTI-DAY HISTORY FUNCTIONS ---
+        function formatDateDisplay(date) {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) return "Hoje";
+            if (date.toDateString() === yesterday.toDateString()) return "Ontem";
+            
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function updateDateDisplay() {
+            document.getElementById('current-date-display').innerText = formatDateDisplay(currentViewDate);
+            
+            // Disable next button if viewing today
+            const today = new Date();
+            const isToday = currentViewDate.toDateString() === today.toDateString();
+            document.getElementById('next-day-btn').disabled = isToday;
+            document.getElementById('next-day-btn').style.opacity = isToday ? '0.3' : '1';
+        }
+
+        function changeViewDate(days) {
+            currentViewDate.setDate(currentViewDate.getDate() + days);
+            updateDateDisplay();
+            loadDailyLog();
+        }
+
+        // Funções simplificadas - apenas localStorage
+        async function loadDailyLogForDate(date) {
+            loadDailyLogLocal();
+            renderLogs();
+            updateDashboard();
+            
+            const today = new Date();
+            if (date.toDateString() === today.toDateString()) {
+                analyzeContext();
+            }
+        }
+
+        async function loadWeeklyData() {
+            return await loadWeeklyDataLocal();
+        }
+
+        async function renderWeeklyChart() {
+            const weekData = await loadWeeklyData();
+            
+            const ctx = document.getElementById('weekly-chart').getContext('2d');
+            
+            if (weeklyChart) weeklyChart.destroy();
+            
+            weeklyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: weekData.map(d => d.label),
+                    datasets: [
+                        {
+                            label: 'Calorias',
+                            data: weekData.map(d => d.total.cals),
+                            borderColor: 'rgb(168, 85, 247)',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Proteína (g)',
+                            data: weekData.map(d => d.total.prot),
+                            borderColor: 'rgb(34, 197, 94)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { 
+                            labels: { color: '#e2e8f0', font: { size: 10 } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: { color: '#a855f7' },
+                            grid: { color: 'rgba(71, 85, 105, 0.3)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: { color: '#22c55e' },
+                            grid: { drawOnChartArea: false }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(71, 85, 105, 0.3)' }
+                        }
+                    }
+                }
+            });
+            
+            // Render summary
+            renderWeeklySummary(weekData);
+        }
+
+        function renderWeeklySummary(weekData) {
+            const container = document.getElementById('weekly-summary');
+            container.innerHTML = '';
+            
+            const totalCals = weekData.reduce((sum, d) => sum + d.total.cals, 0);
+            const avgCals = Math.round(totalCals / 7);
+            const totalProt = weekData.reduce((sum, d) => sum + d.total.prot, 0);
+            const avgProt = Math.round(totalProt / 7);
+            
+            const daysOnTrack = weekData.filter(d => 
+                d.total.cals >= userSettings.cals * 0.9 && 
+                d.total.cals <= userSettings.cals * 1.1
+            ).length;
+            
+            container.innerHTML = `
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-800/50 rounded p-3 text-center">
+                        <div class="text-xs text-purple-400 uppercase font-bold mb-1">Média Calorias</div>
+                        <div class="text-2xl font-bold text-white">${avgCals}</div>
+                        <div class="text-xs text-gray-500">kcal/dia</div>
+                    </div>
+                    <div class="bg-slate-800/50 rounded p-3 text-center">
+                        <div class="text-xs text-green-400 uppercase font-bold mb-1">Média Proteína</div>
+                        <div class="text-2xl font-bold text-white">${avgProt}g</div>
+                        <div class="text-xs text-gray-500">/dia</div>
+                    </div>
+                    <div class="bg-slate-800/50 rounded p-3 text-center col-span-2">
+                        <div class="text-xs text-cyan-400 uppercase font-bold mb-1">Dias no Alvo</div>
+                        <div class="text-2xl font-bold text-white">${daysOnTrack}/7</div>
+                        <div class="text-xs text-gray-500">dentro da meta (±10%)</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- NOTIFICATION FUNCTIONS ---
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function showNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/3480/3480822.png',
+                    badge: 'https://cdn-icons-png.flaticon.com/512/3480/3480822.png'
+                });
+            }
+        }
+
+        function checkNotifications() {
+            const now = new Date();
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            if (notificationSettings.breakfast.enabled && currentTime === notificationSettings.breakfast.time) {
+                showNotification('☀️ Café da Manhã', 'Hora do café da manhã! Não esqueça de registrar sua refeição.');
+            }
+            if (notificationSettings.lunch.enabled && currentTime === notificationSettings.lunch.time) {
+                showNotification('🍽️ Almoço', 'Hora do almoço! Mantenha sua dieta em dia.');
+            }
+            if (notificationSettings.dinner.enabled && currentTime === notificationSettings.dinner.time) {
+                showNotification('🌙 Jantar', 'Hora do jantar! Lembre-se de registrar suas macros.');
+            }
+        }
+
+        function startNotificationScheduler() {
+            // Clear existing intervals
+            notificationIntervals.forEach(interval => clearInterval(interval));
+            notificationIntervals = [];
+            
+            // Check every minute
+            const interval = setInterval(checkNotifications, 60000);
+            notificationIntervals.push(interval);
+            
+            // Check intelligent notifications every 30 minutes
+            const intelligentInterval = setInterval(checkIntelligentNotifications, 30 * 60000);
+            notificationIntervals.push(intelligentInterval);
+        }
+
+        function checkIntelligentNotifications() {
+            const now = new Date();
+            const hour = now.getHours();
+            
+            // Só notifica entre 8h e 22h
+            if (hour < 8 || hour > 22) return;
+            
+            const t = dailyLog.total;
+            const g = userSettings;
+            
+            // Verifica se está muito abaixo da meta (menos de 50% e já é tarde)
+            if (hour >= 18) {
+                const pctCals = t.cals / g.cals;
+                if (pctCals < 0.5) {
+                    showNotification('⚠️ Atenção!', `Você está com apenas ${Math.round(pctCals * 100)}% das calorias do dia. Não esqueça de comer!`);
+                }
+                
+                const pctProt = t.prot / g.prot;
+                if (pctProt < 0.5) {
+                    showNotification('🥩 Proteína Baixa!', `Você está com apenas ${Math.round(pctProt * 100)}% da proteína do dia. Coma mais proteína!`);
+                }
+            }
+            
+            // Verifica se não registrou refeição há muito tempo
+            if (dailyLog.items && dailyLog.items.length > 0) {
+                const lastMeal = dailyLog.items[dailyLog.items.length - 1];
+                const lastMealTime = new Date(lastMeal.timestamp);
+                const hoursSinceLastMeal = (now - lastMealTime) / (1000 * 60 * 60);
+                
+                if (hoursSinceLastMeal >= 4 && hour >= 12 && hour <= 20) {
+                    showNotification('🍽️ Hora de Comer!', `Já se passaram ${Math.floor(hoursSinceLastMeal)} horas desde sua última refeição!`);
+                }
+            }
+            
+            // Verifica hidratação
+            const waterPct = (dailyLog.water || 0) / waterGoal;
+            if (hour >= 16 && waterPct < 0.5) {
+                showNotification('💧 Beba Água!', `Você bebeu apenas ${Math.round(waterPct * 100)}% da meta de água hoje!`);
+            }
+            
+            // Parabeniza se bateu a meta
+            if (t.cals >= g.cals * 0.95 && t.cals <= g.cals * 1.05 && t.prot >= g.prot * 0.95) {
+                const lastCongrats = localStorage.getItem('macromixer_last_congrats');
+                const today = new Date().toISOString().split('T')[0];
+                
+                if (lastCongrats !== today) {
+                    showNotification('🎉 Parabéns!', 'Você bateu suas metas de hoje! Continue assim!');
+                    localStorage.setItem('macromixer_last_congrats', today);
+                }
+            }
+        }
+
+        // Funções com Firebase
+        async function loadNotificationSettings() {
+            if (!currentUser) return;
+            const docRef = doc(db, 'users', currentUser.uid, 'settings', 'notifications');
+            
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    notificationSettings = docSnap.data();
+                    updateNotificationUI();
+                }
+            } catch (error) {
+                console.log("Error loading notification settings", error);
+            }
+        }
+
+        async function saveNotificationSettings() {
+            if (!currentUser) return;
+            
+            const newSettings = {
+                breakfast: {
+                    time: document.getElementById('breakfast-time').value,
+                    enabled: document.getElementById('breakfast-enabled').checked
+                },
+                lunch: {
+                    time: document.getElementById('lunch-time').value,
+                    enabled: document.getElementById('lunch-enabled').checked
+                },
+                dinner: {
+                    time: document.getElementById('dinner-time').value,
+                    enabled: document.getElementById('dinner-enabled').checked
+                }
+            };
+            
+            const docRef = doc(db, 'users', currentUser.uid, 'settings', 'notifications');
+            await setDoc(docRef, newSettings);
+            notificationSettings = newSettings;
+            
+            startNotificationScheduler();
+            
+            const btn = document.getElementById('save-notifications-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "✓ SALVO!";
+            btn.classList.add('bg-green-600');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('bg-green-600');
+            }, 1500);
+            
+            updateNotificationStatus();
+        }
+
+        function updateNotificationUI() {
+            document.getElementById('breakfast-time').value = notificationSettings.breakfast.time;
+            document.getElementById('breakfast-enabled').checked = notificationSettings.breakfast.enabled;
+            document.getElementById('lunch-time').value = notificationSettings.lunch.time;
+            document.getElementById('lunch-enabled').checked = notificationSettings.lunch.enabled;
+            document.getElementById('dinner-time').value = notificationSettings.dinner.time;
+            document.getElementById('dinner-enabled').checked = notificationSettings.dinner.enabled;
+            
+            updateNotificationStatus();
+        }
+
+        function updateNotificationStatus() {
+            const anyEnabled = notificationSettings.breakfast.enabled || 
+                               notificationSettings.lunch.enabled || 
+                               notificationSettings.dinner.enabled;
+            
+            const statusEl = document.getElementById('notification-status');
+            if (anyEnabled) {
+                statusEl.innerHTML = '<i class="fa-solid fa-check-circle text-green-500 mr-1"></i>Lembretes ativos!';
+                statusEl.className = 'text-xs text-green-400 text-center py-2';
+            } else {
+                statusEl.innerHTML = '<i class="fa-solid fa-info-circle mr-1"></i>Configure seus lembretes para não esquecer de comer!';
+                statusEl.className = 'text-xs text-gray-400 text-center py-2';
+            }
+        }
+
+        // --- EXPORT FUNCTIONS ---
+        async function exportToCSV() {
+            const weekData = await loadWeeklyData();
+            
+            let csv = 'Data,Calorias,Proteína,Carboidrato,Gordura\n';
+            weekData.forEach(day => {
+                csv += `${day.date},${day.total.cals},${day.total.prot},${day.total.carb},${day.total.fat}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `macromixer_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function exportToJSON() {
+            const weekData = await loadWeeklyData();
+            
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                userSettings: userSettings,
+                weeklyData: weekData
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `macromixer_export_${new Date().toISOString().split('T')[0]}.json`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- EVENT LISTENERS ---
+        console.log('📌 Registrando event listeners...');
+        
+        document.getElementById('goals-form').addEventListener('submit', saveUserSettings);
+        document.getElementById('edit-goals-btn').addEventListener('click', () => document.getElementById('goals-section').classList.remove('hidden'));
+        document.getElementById('close-goals-btn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('goals-section').classList.add('hidden'); });
+        document.getElementById('btn-calculate').addEventListener('click', handleCalculate);
+        document.getElementById('close-modal').addEventListener('click', () => document.getElementById('modal-result').classList.add('hidden'));
+        document.getElementById('confirm-meal').addEventListener('click', pushMealToDB);
+        document.getElementById('reset-day-btn').addEventListener('click', resetDay);
+        document.getElementById('reset-water-btn').addEventListener('click', resetWater);
+        document.getElementById('water-btn-100').addEventListener('click', () => addWater(100));
+        document.getElementById('water-btn-250').addEventListener('click', () => addWater(250));
+        document.getElementById('water-btn-500').addEventListener('click', () => addWater(500));
+        document.getElementById('water-btn-1000').addEventListener('click', () => addWater(1000));
+        document.getElementById('copy-yesterday-btn').addEventListener('click', copyYesterday);
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        document.getElementById('save-weight-btn').addEventListener('click', saveWeight);
+        document.getElementById('toggle-weight-chart-btn').addEventListener('click', toggleWeightChart);
+        document.getElementById('meal-photo-input').addEventListener('change', handlePhotoSelect);
+        document.getElementById('remove-photo-btn').addEventListener('click', removePhoto);
+        
+        const btnLogin = document.getElementById('btn-login');
+        const btnLogout = document.getElementById('btn-logout');
+        
+        if (btnLogin) {
+            console.log('✅ Botão login encontrado, adicionando listener');
+            btnLogin.addEventListener('click', handleLogin);
+        } else {
+            console.error('❌ Botão login NÃO encontrado!');
+        }
+        
+        if (btnLogout) {
+            console.log('✅ Botão logout encontrado, adicionando listener');
+            btnLogout.addEventListener('click', handleLogout);
+        } else {
+            console.log('⚠️ Botão logout não encontrado (normal se não estiver logado)');
+        }
+        
+        console.log('✅ Event listeners registrados!');
+        
+        // New event listeners
+        document.getElementById('prev-day-btn').addEventListener('click', () => changeViewDate(-1));
+        document.getElementById('next-day-btn').addEventListener('click', () => changeViewDate(1));
+        document.getElementById('view-history-btn').addEventListener('click', () => {
+            document.getElementById('history-section').classList.remove('hidden');
+            renderWeeklyChart();
+        });
+        document.getElementById('close-history-btn').addEventListener('click', () => {
+            document.getElementById('history-section').classList.add('hidden');
+        });
+        document.getElementById('toggle-notifications-btn').addEventListener('click', () => {
+            const settings = document.getElementById('notification-settings');
+            settings.classList.toggle('hidden');
+            if (!settings.classList.contains('hidden')) {
+                requestNotificationPermission();
+            }
+        });
+        document.getElementById('save-notifications-btn').addEventListener('click', saveNotificationSettings);
+        document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
+        document.getElementById('export-json-btn').addEventListener('click', exportToJSON);
+        
+        // Initialize
+        console.log('🚀 === INICIALIZANDO APP v2.1 ===');
+        loadTheme();
+        updateDateDisplay();
+        loadNotificationSettings();
+        startNotificationScheduler();
+        loadWeightHistory();
+        initAuth();
+        
+        // Register Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then((registration) => {
+                    console.log('✅ Service Worker registrado:', registration.scope);
+                })
+                .catch((error) => {
+                    console.error('❌ Erro ao registrar Service Worker:', error);
+                });
+        }
+        
+        console.log('✅ === APP TOTALMENTE INICIALIZADO ===');
+
+    </script>
+</body>
+</html>
