@@ -76,7 +76,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.2.1</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.2.2</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -277,10 +277,10 @@
                 </button>
             </div>
             
-            <div class="flex items-center gap-3 mb-3">
+            <div class="flex items-center gap-2 mb-3">
                 <input type="number" id="weight-input" step="0.1" placeholder="Ex: 93.5" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-white text-center text-lg font-bold focus:border-purple-500 outline-none" />
-                <span class="text-slate-400 text-sm">kg</span>
-                <button id="save-weight-btn" class="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded font-bold transition-all">
+                <span class="text-slate-400 text-sm whitespace-nowrap">kg</span>
+                <button id="save-weight-btn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded font-bold transition-all whitespace-nowrap text-sm">
                     Salvar
                 </button>
             </div>
@@ -867,8 +867,9 @@
             if (saved) {
                 dailyLog = saved;
                 if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+                if (!dailyLog.water) dailyLog.water = 0;
             } else {
-                dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+                dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
             }
             renderLogs();
             updateDashboard();
@@ -928,7 +929,7 @@
         // --- DATABASE OPS ---
         function resetUIState() {
              userSettings = { cals: 2100, prot: 240, carb: 180, fat: 45, weight: 93, wheyDose: 30, wheyProt: 24 };
-             dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+             dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
              updateUIInputs();
              updateDashboard();
              renderLogs();
@@ -1328,8 +1329,10 @@
 
         // ==================== CONTADOR DE ÁGUA ====================
         function addWater(amount) {
+            console.log('🚰 addWater chamado:', amount);
             if (!dailyLog.water) dailyLog.water = 0;
             dailyLog.water += amount;
+            console.log('💧 Água total:', dailyLog.water);
             updateWaterDisplay();
             saveWaterToFirebase();
         }
@@ -1359,9 +1362,15 @@
         }
 
         async function saveWaterToFirebase() {
+            console.log('💾 saveWaterToFirebase chamado');
+            console.log('👤 currentUser:', currentUser ? currentUser.uid : 'null');
+            console.log('📦 useLocalStorage:', useLocalStorage);
+            console.log('💧 dailyLog.water:', dailyLog.water);
+            
             if (!currentUser || useLocalStorage) {
                 const todayStr = new Date().toISOString().split('T')[0];
                 localStorage.setItem('macromixer_water_' + todayStr, dailyLog.water.toString());
+                console.log('✅ Água salva no localStorage:', todayStr, dailyLog.water);
                 return;
             }
             
@@ -1369,13 +1378,16 @@
                 const todayStr = new Date().toISOString().split('T')[0];
                 const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
                 
+                console.log('🔥 Salvando no Firebase:', todayStr, dailyLog.water);
                 // Usa setDoc com merge para criar ou atualizar
                 await setDoc(docRef, { water: dailyLog.water }, { merge: true });
+                console.log('✅ Água salva no Firebase com sucesso!');
             } catch (error) {
-                console.error('Erro ao salvar água:', error);
+                console.error('❌ Erro ao salvar água no Firebase:', error);
                 // Fallback para localStorage se falhar
                 const todayStr = new Date().toISOString().split('T')[0];
                 localStorage.setItem('macromixer_water_' + todayStr, dailyLog.water.toString());
+                console.log('✅ Água salva no localStorage (fallback):', todayStr, dailyLog.water);
             }
         }
 
