@@ -1,7 +1,7 @@
 // Service Worker para MacroMixer PWA
 const CACHE_NAME = 'macromixer-v2.1';
 const urlsToCache = [
-  '/macromixer.html',
+  './macromixer.html',
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
@@ -80,7 +80,7 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => {
         // Return offline page if available
-        return caches.match('/macromixer.html');
+        return caches.match('./macromixer.html');
       })
   );
 });
@@ -122,7 +122,7 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   event.waitUntil(
-    clients.openWindow('/macromixer.html')
+    clients.openWindow('./macromixer.html')
   );
 });
 
