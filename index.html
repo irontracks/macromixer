@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MacroMixer - Dr. Carlos Edition</title>
+    <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
+    <meta name="theme-color" content="#06b6d4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MacroMixer">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3480/3480822.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -12,15 +19,17 @@
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #0f172a; /* Slate 900 - Darker base */
             color: #e2e8f0;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .glass-panel {
             background: rgba(30, 41, 59, 0.7); /* Slate 800 */
             backdrop-filter: blur(12px);
             border: 1px solid rgba(71, 85, 105, 0.4);
+            transition: background 0.3s ease, border 0.3s ease;
         }
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-track { background: #0f172a; transition: background 0.3s ease; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
@@ -34,6 +43,29 @@
         .preset-btn:active {
             transform: scale(0.95);
         }
+
+        /* LIGHT MODE */
+        body.light-mode {
+            background-color: #f1f5f9; /* Slate 100 */
+            color: #1e293b; /* Slate 800 */
+        }
+        body.light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(203, 213, 225, 0.6);
+        }
+        body.light-mode ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        body.light-mode ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+        }
+        body.light-mode ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        body.light-mode nav {
+            background-color: #ffffff !important;
+            border-bottom-color: #e2e8f0 !important;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center pb-10">
@@ -43,9 +75,12 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.0</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.1</span></h1>
             </div>
-            <div id="auth-container" class="text-xs">
+            <div id="auth-container" class="text-xs flex items-center gap-3">
+                <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
+                    <i class="fa-solid fa-moon" id="theme-icon"></i>
+                </button>
                 <button id="btn-login" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-600 transition-colors flex items-center gap-2">
                     <i class="fa-brands fa-google"></i> Entrar
                 </button>
@@ -186,6 +221,93 @@
             </div>
         </section>
 
+        <!-- Water Counter -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-blue-400">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-droplet text-blue-400 text-lg"></i>
+                    <h2 class="text-sm font-bold text-white">Hidratação</h2>
+                </div>
+                <button id="reset-water-btn" class="text-xs text-slate-500 hover:text-white" title="Resetar">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+            
+            <div class="text-center mb-3">
+                <div class="text-3xl font-black text-white mb-1">
+                    <span id="water-current">0</span><span class="text-lg text-slate-500">ml</span>
+                </div>
+                <div class="text-xs text-slate-400">Meta: <span id="water-goal">3000</span>ml</div>
+            </div>
+            
+            <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-800 mb-4">
+                <div id="water-bar" class="bg-gradient-to-r from-blue-400 to-cyan-400 h-3 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(96,165,250,0.5)]" style="width: 0%"></div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-2">
+                <button onclick="addWater(100)" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded transition-all border border-slate-700">
+                    +100ml
+                </button>
+                <button onclick="addWater(250)" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded transition-all border border-slate-700">
+                    +250ml
+                </button>
+                <button onclick="addWater(500)" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded transition-all">
+                    +500ml
+                </button>
+                <button onclick="addWater(1000)" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded transition-all">
+                    +1L
+                </button>
+            </div>
+            
+            <div id="water-status" class="text-xs text-center mt-3 text-slate-400">
+                <i class="fa-solid fa-info-circle mr-1"></i>Beba água regularmente!
+            </div>
+        </section>
+
+        <!-- Weight Tracker -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-purple-500">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-weight-scale text-purple-400 text-lg"></i>
+                    <h2 class="text-sm font-bold text-white">Peso Corporal</h2>
+                </div>
+                <button id="toggle-weight-chart-btn" class="text-xs text-purple-400 hover:text-purple-300">
+                    <i class="fa-solid fa-chart-line mr-1"></i>Gráfico
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-3 mb-3">
+                <input type="number" id="weight-input" step="0.1" placeholder="Ex: 93.5" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-white text-center text-lg font-bold focus:border-purple-500 outline-none" />
+                <span class="text-slate-400 text-sm">kg</span>
+                <button id="save-weight-btn" class="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded font-bold transition-all">
+                    Salvar
+                </button>
+            </div>
+            
+            <div id="weight-info" class="text-xs text-center text-slate-400">
+                <i class="fa-solid fa-info-circle mr-1"></i>Registre seu peso diariamente
+            </div>
+            
+            <!-- Weight Chart (Hidden by default) -->
+            <div id="weight-chart-container" class="hidden mt-4 pt-4 border-t border-slate-700">
+                <canvas id="weight-chart" class="w-full" height="200"></canvas>
+                <div id="weight-stats" class="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
+                    <div class="bg-slate-800/50 rounded p-2">
+                        <div class="text-slate-400">Inicial</div>
+                        <div class="text-white font-bold" id="weight-initial">--</div>
+                    </div>
+                    <div class="bg-slate-800/50 rounded p-2">
+                        <div class="text-slate-400">Atual</div>
+                        <div class="text-white font-bold" id="weight-current">--</div>
+                    </div>
+                    <div class="bg-slate-800/50 rounded p-2">
+                        <div class="text-slate-400">Variação</div>
+                        <div class="font-bold" id="weight-diff">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Suggestion Box (Dynamic) -->
         <div id="suggestion-box" class="hidden bg-slate-800 border-l-4 border-cyan-500 p-4 rounded text-sm text-gray-300 shadow-lg">
             <div class="flex items-start gap-3">
@@ -223,6 +345,7 @@
                     <button id="next-day-btn" class="text-cyan-400 hover:text-cyan-300"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
                 <div class="flex gap-2">
+                    <button id="copy-yesterday-btn" class="text-xs text-green-400 hover:text-green-300" title="Copiar refeições de ontem"><i class="fa-solid fa-copy mr-1"></i>Copiar</button>
                     <button id="view-history-btn" class="text-xs text-cyan-400 hover:text-cyan-300"><i class="fa-solid fa-calendar-days mr-1"></i>Histórico</button>
                     <button id="reset-day-btn" class="text-xs text-red-400 hover:text-red-300"><i class="fa-solid fa-trash mr-1"></i>Zerar</button>
                 </div>
@@ -329,6 +452,23 @@
             <div class="p-4 max-h-[50vh] overflow-y-auto" id="modal-content">
                 <!-- Dynamic Content -->
             </div>
+            
+            <!-- Photo Section -->
+            <div class="px-4 pb-3">
+                <div class="flex items-center gap-2 mb-2">
+                    <label for="meal-photo-input" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 px-3 rounded transition-all cursor-pointer text-center border border-slate-700">
+                        <i class="fa-solid fa-camera mr-2"></i>Adicionar Foto
+                    </label>
+                    <input type="file" id="meal-photo-input" accept="image/*" capture="environment" class="hidden" />
+                    <button id="remove-photo-btn" class="hidden bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+                <div id="photo-preview" class="hidden rounded overflow-hidden border border-slate-700">
+                    <img id="photo-preview-img" class="w-full" />
+                </div>
+            </div>
+            
             <div class="p-4 bg-slate-900 border-t border-slate-700">
                 <button id="confirm-meal" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-cyan-900/50">
                     Lançar na Dieta
@@ -341,7 +481,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- DATABASE DE ALIMENTOS EXPANDIDO v2.0 (Padronizado Dr. Carlos) ---
         // Macros por 100g. Mais de 150 alimentos!
@@ -616,16 +756,69 @@
         const googleProvider = new GoogleAuthProvider();
         const appId = "macromixer-prod";
         
+        // ==================== PERFORMANCE ====================
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function throttle(func, limit) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        // ==================== SEGURANÇA ====================
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') return input;
+            return input.replace(/[<>]/g, '').trim().substring(0, 1000); // Limita a 1000 chars
+        }
+
+        function validateNumber(value, min, max) {
+            const num = parseFloat(value);
+            if (isNaN(num) || num < min || num > max) return null;
+            return num;
+        }
+
+        function validateWeight(weight) {
+            return validateNumber(weight, 30, 300); // 30kg - 300kg
+        }
+
+        function validateCalories(cals) {
+            return validateNumber(cals, 500, 10000); // 500 - 10000 kcal
+        }
+
+        function validateMacros(value) {
+            return validateNumber(value, 0, 1000); // 0 - 1000g
+        }
+
         // Variáveis globais
         let currentUser = null;
         let useLocalStorage = false;
         let userSettings = { cals: 2100, prot: 240, carb: 180, fat: 45, weight: 93, wheyDose: 30, wheyProt: 24 }; 
-        let dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+        let dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
         let tempMealAnalysis = null;
         let currentViewDate = new Date();
         let weeklyChart = null;
         let notificationSettings = { breakfast: { time: '08:00', enabled: false }, lunch: { time: '12:00', enabled: false }, dinner: { time: '19:00', enabled: false } };
         let notificationIntervals = [];
+        let waterGoal = 3000; // Meta padrão: 3L
+        let isDarkMode = true; // Tema padrão: escuro
+        let weightHistory = []; // Histórico de peso
+        let weightChart = null; // Gráfico de peso
+        let currentMealPhoto = null; // Foto temporária da refeição
 
         // --- AUTH COM GOOGLE ---
         const handleLogin = async () => {
@@ -866,14 +1059,28 @@
             e.preventDefault();
             if (!currentUser) return;
 
+            // Validação de segurança
+            const weight = validateWeight(document.getElementById('user-weight').value);
+            const wheyDose = validateNumber(document.getElementById('whey-dose').value, 10, 100);
+            const wheyProt = validateNumber(document.getElementById('whey-prot').value, 5, 50);
+            const cals = validateCalories(document.getElementById('goal-cals').value);
+            const prot = validateMacros(document.getElementById('goal-prot').value);
+            const carb = validateMacros(document.getElementById('goal-carb').value);
+            const fat = validateMacros(document.getElementById('goal-fat').value);
+
+            if (!weight || !wheyDose || !wheyProt || !cals || !prot || !carb || !fat) {
+                alert('⚠️ Valores inválidos! Verifique os campos e tente novamente.');
+                return;
+            }
+
             const newSettings = {
-                weight: Number(document.getElementById('user-weight').value) || 93,
-                wheyDose: Number(document.getElementById('whey-dose').value) || 30,
-                wheyProt: Number(document.getElementById('whey-prot').value) || 24,
-                cals: Number(document.getElementById('goal-cals').value),
-                prot: Number(document.getElementById('goal-prot').value),
-                carb: Number(document.getElementById('goal-carb').value),
-                fat: Number(document.getElementById('goal-fat').value)
+                weight: weight,
+                wheyDose: wheyDose,
+                wheyProt: wheyProt,
+                cals: cals,
+                prot: prot,
+                carb: carb,
+                fat: fat
             };
 
             const docRef = doc(db, 'users', currentUser.uid, 'settings', 'goals');
@@ -900,11 +1107,13 @@
                 if (docSnap.exists()) {
                     dailyLog = docSnap.data();
                     if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+                    if (!dailyLog.water) dailyLog.water = 0;
                 } else {
-                    dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 } };
+                    dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
                 }
                 renderLogs();
                 updateDashboard();
+                updateWaterDisplay();
                 analyzeContext();
             });
         }
@@ -924,7 +1133,8 @@
                 timestamp: new Date().toISOString(),
                 foods: tempMealAnalysis.foods,
                 totals: tempMealAnalysis.totals,
-                isApproximate: tempMealAnalysis.isApproximate
+                isApproximate: tempMealAnalysis.isApproximate,
+                photo: currentMealPhoto || null
             };
 
             const todayStr = new Date().toISOString().split('T')[0];
@@ -938,6 +1148,7 @@
                 
             document.getElementById('meal-input').value = "";
             document.getElementById('modal-result').classList.add('hidden');
+            removePhoto(); // Limpa foto após salvar
         }
         
         async function resetDay() {
@@ -1125,7 +1336,7 @@
         }
 
         function handleCalculate() {
-            const text = document.getElementById('meal-input').value;
+            const text = sanitizeInput(document.getElementById('meal-input').value);
             if (!text.trim()) return;
 
             tempMealAnalysis = parseInput(text);
@@ -1190,7 +1401,7 @@
             document.getElementById('target-fat').innerText = userSettings.fat;
         }
 
-        function updateDashboard() {
+        const updateDashboard = throttle(function() {
             const t = dailyLog.total;
             const g = userSettings;
             
@@ -1206,7 +1417,7 @@
             setBar('bar-prot', t.prot, g.prot);
             setBar('bar-carb', t.carb, g.carb);
             setBar('bar-fat', t.fat, g.fat);
-        }
+        }, 100); // Throttle de 100ms
 
         function setBar(id, val, max) {
             const pct = Math.min(100, Math.max(0, (val / max) * 100));
@@ -1214,6 +1425,360 @@
             if (id === 'bar-cals') el.style.width = `${pct}%`;
             else el.style.height = `${pct}%`;
             if (val > max) el.classList.add('bg-red-500'); else el.classList.remove('bg-red-500');
+        }
+
+        // ==================== CONTADOR DE ÁGUA ====================
+        function addWater(amount) {
+            if (!dailyLog.water) dailyLog.water = 0;
+            dailyLog.water += amount;
+            updateWaterDisplay();
+            saveWaterToFirebase();
+        }
+
+        function updateWaterDisplay() {
+            const current = dailyLog.water || 0;
+            const goal = waterGoal;
+            const percentage = Math.min(100, (current / goal) * 100);
+            
+            document.getElementById('water-current').innerText = current;
+            document.getElementById('water-goal').innerText = goal;
+            document.getElementById('water-bar').style.width = percentage + '%';
+            
+            // Status message
+            const statusEl = document.getElementById('water-status');
+            if (percentage >= 100) {
+                statusEl.innerHTML = '<i class="fa-solid fa-check-circle mr-1 text-green-400"></i><span class="text-green-400">Meta atingida! 🎉</span>';
+            } else if (percentage >= 75) {
+                statusEl.innerHTML = '<i class="fa-solid fa-thumbs-up mr-1 text-blue-400"></i><span class="text-blue-400">Ótimo progresso!</span>';
+            } else if (percentage >= 50) {
+                statusEl.innerHTML = '<i class="fa-solid fa-droplet mr-1 text-cyan-400"></i><span class="text-cyan-400">Continue assim!</span>';
+            } else if (percentage >= 25) {
+                statusEl.innerHTML = '<i class="fa-solid fa-info-circle mr-1 text-yellow-400"></i><span class="text-yellow-400">Beba mais água!</span>';
+            } else {
+                statusEl.innerHTML = '<i class="fa-solid fa-exclamation-triangle mr-1 text-orange-400"></i><span class="text-orange-400">Hidrate-se!</span>';
+            }
+        }
+
+        async function saveWaterToFirebase() {
+            if (!currentUser || useLocalStorage) {
+                const todayStr = new Date().toISOString().split('T')[0];
+                localStorage.setItem('macromixer_water_' + todayStr, dailyLog.water.toString());
+                return;
+            }
+            
+            try {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+                await updateDoc(docRef, { water: dailyLog.water });
+            } catch (error) {
+                console.error('Erro ao salvar água:', error);
+            }
+        }
+
+        function resetWater() {
+            if (confirm('Resetar contador de água?')) {
+                dailyLog.water = 0;
+                updateWaterDisplay();
+                saveWaterToFirebase();
+            }
+        }
+
+        // ==================== COPIAR DIA ANTERIOR ====================
+        async function copyYesterday() {
+            if (!confirm('Copiar todas as refeições de ontem para hoje?')) return;
+            
+            try {
+                // Calcula data de ontem
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                
+                let yesterdayLog;
+                
+                if (!currentUser || useLocalStorage) {
+                    // Modo local
+                    const stored = localStorage.getItem('macromixer_log_' + yesterdayStr);
+                    if (!stored) {
+                        alert('Não há dados de ontem para copiar.');
+                        return;
+                    }
+                    yesterdayLog = JSON.parse(stored);
+                } else {
+                    // Modo Firebase
+                    const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', yesterdayStr);
+                    const docSnap = await getDoc(docRef);
+                    
+                    if (!docSnap.exists()) {
+                        alert('Não há dados de ontem para copiar.');
+                        return;
+                    }
+                    yesterdayLog = docSnap.data();
+                }
+                
+                if (!yesterdayLog.items || yesterdayLog.items.length === 0) {
+                    alert('Ontem não há refeições registradas.');
+                    return;
+                }
+                
+                // Copia os items
+                for (const item of yesterdayLog.items) {
+                    dailyLog.items.push({...item, timestamp: new Date().toISOString()});
+                }
+                
+                // Recalcula totais
+                recalculateTotals();
+                
+                // Salva
+                if (!currentUser || useLocalStorage) {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    localStorage.setItem('macromixer_log_' + todayStr, JSON.stringify(dailyLog));
+                } else {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+                    await setDoc(docRef, dailyLog);
+                }
+                
+                // Atualiza UI
+                renderLogs();
+                updateDashboard();
+                analyzeContext();
+                
+                alert(`✅ ${yesterdayLog.items.length} refeições copiadas com sucesso!`);
+            } catch (error) {
+                console.error('Erro ao copiar dia anterior:', error);
+                alert('Erro ao copiar refeições. Tente novamente.');
+            }
+        }
+
+        function recalculateTotals() {
+            dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+            for (const item of dailyLog.items) {
+                dailyLog.total.cals += item.cals || 0;
+                dailyLog.total.prot += item.prot || 0;
+                dailyLog.total.carb += item.carb || 0;
+                dailyLog.total.fat += item.fat || 0;
+            }
+        }
+
+        // ==================== MODO ESCURO/CLARO ====================
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('light-mode', !isDarkMode);
+            
+            const icon = document.getElementById('theme-icon');
+            if (isDarkMode) {
+                icon.className = 'fa-solid fa-moon';
+            } else {
+                icon.className = 'fa-solid fa-sun';
+            }
+            
+            // Salva preferência
+            localStorage.setItem('macromixer_theme', isDarkMode ? 'dark' : 'light');
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('macromixer_theme');
+            if (savedTheme === 'light') {
+                isDarkMode = false;
+                document.body.classList.add('light-mode');
+                document.getElementById('theme-icon').className = 'fa-solid fa-sun';
+            }
+        }
+
+        // ==================== REGISTRO DE PESO ====================
+        async function saveWeight() {
+            const weightInput = document.getElementById('weight-input');
+            const weight = parseFloat(weightInput.value);
+            
+            if (!weight || weight < 30 || weight > 300) {
+                alert('Por favor, insira um peso válido (30-300kg)');
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            const entry = { date: today, weight: weight };
+            
+            // Salva no Firebase ou localStorage
+            if (!currentUser || useLocalStorage) {
+                let history = JSON.parse(localStorage.getItem('macromixer_weight_history') || '[]');
+                // Remove entrada do mesmo dia se existir
+                history = history.filter(e => e.date !== today);
+                history.push(entry);
+                history.sort((a, b) => new Date(a.date) - new Date(b.date));
+                localStorage.setItem('macromixer_weight_history', JSON.stringify(history));
+                weightHistory = history;
+            } else {
+                try {
+                    const docRef = doc(db, 'users', currentUser.uid, 'weight_history', today);
+                    await setDoc(docRef, entry);
+                    await loadWeightHistory();
+                } catch (error) {
+                    console.error('Erro ao salvar peso:', error);
+                    alert('Erro ao salvar peso. Tente novamente.');
+                    return;
+                }
+            }
+            
+            weightInput.value = '';
+            updateWeightDisplay();
+            alert('✅ Peso registrado com sucesso!');
+        }
+
+        async function loadWeightHistory() {
+            if (!currentUser || useLocalStorage) {
+                weightHistory = JSON.parse(localStorage.getItem('macromixer_weight_history') || '[]');
+            } else {
+                try {
+                    const collectionRef = collection(db, 'users', currentUser.uid, 'weight_history');
+                    const querySnapshot = await getDocs(collectionRef);
+                    weightHistory = [];
+                    querySnapshot.forEach((doc) => {
+                        weightHistory.push(doc.data());
+                    });
+                    weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+                } catch (error) {
+                    console.error('Erro ao carregar histórico de peso:', error);
+                }
+            }
+            updateWeightDisplay();
+        }
+
+        function updateWeightDisplay() {
+            if (weightHistory.length === 0) {
+                document.getElementById('weight-info').innerHTML = '<i class="fa-solid fa-info-circle mr-1"></i>Registre seu peso diariamente';
+                return;
+            }
+            
+            const latest = weightHistory[weightHistory.length - 1];
+            const initial = weightHistory[0];
+            const diff = latest.weight - initial.weight;
+            
+            document.getElementById('weight-info').innerHTML = `<i class="fa-solid fa-check-circle mr-1 text-green-400"></i><span class="text-green-400">Último: ${latest.weight}kg em ${new Date(latest.date).toLocaleDateString('pt-BR')}</span>`;
+            
+            // Atualiza stats
+            document.getElementById('weight-initial').innerText = initial.weight + 'kg';
+            document.getElementById('weight-current').innerText = latest.weight + 'kg';
+            
+            const diffEl = document.getElementById('weight-diff');
+            if (diff > 0) {
+                diffEl.innerText = '+' + diff.toFixed(1) + 'kg';
+                diffEl.className = 'font-bold text-red-400';
+            } else if (diff < 0) {
+                diffEl.innerText = diff.toFixed(1) + 'kg';
+                diffEl.className = 'font-bold text-green-400';
+            } else {
+                diffEl.innerText = '0kg';
+                diffEl.className = 'font-bold text-slate-400';
+            }
+        }
+
+        function toggleWeightChart() {
+            const container = document.getElementById('weight-chart-container');
+            container.classList.toggle('hidden');
+            
+            if (!container.classList.contains('hidden')) {
+                renderWeightChart();
+            }
+        }
+
+        function renderWeightChart() {
+            if (weightHistory.length === 0) {
+                return;
+            }
+            
+            const ctx = document.getElementById('weight-chart').getContext('2d');
+            
+            if (weightChart) {
+                weightChart.destroy();
+            }
+            
+            const labels = weightHistory.map(e => new Date(e.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+            const data = weightHistory.map(e => e.weight);
+            
+            weightChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Peso (kg)',
+                        data: data,
+                        borderColor: 'rgb(168, 85, 247)',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'kg';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==================== FOTO DAS REFEIÇÕES ====================
+        function handlePhotoSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Limita tamanho (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Foto muito grande! Máximo 2MB.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentMealPhoto = e.target.result;
+                document.getElementById('photo-preview-img').src = currentMealPhoto;
+                document.getElementById('photo-preview').classList.remove('hidden');
+                document.getElementById('remove-photo-btn').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removePhoto() {
+            currentMealPhoto = null;
+            document.getElementById('photo-preview').classList.add('hidden');
+            document.getElementById('remove-photo-btn').classList.add('hidden');
+            document.getElementById('meal-photo-input').value = '';
+        }
+
+        function showMealPhoto(photoData) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="relative max-w-2xl w-full">
+                    <button class="absolute -top-10 right-0 text-white text-2xl hover:text-gray-300" onclick="this.closest('.fixed').remove()">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                    <img src="${photoData}" class="w-full rounded-lg shadow-2xl" />
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Fecha ao clicar fora
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
 
         function renderLogs() {
@@ -1236,9 +1801,17 @@
                     ? log.foods.map(f => f.name.split(' ')[0]).join(', ')
                     : 'Refeição';
                     
+                const photoIcon = log.photo ? '<i class="fa-solid fa-camera text-cyan-400 text-[10px] ml-1" title="Com foto"></i>' : '';
                 el.innerHTML = `
-                    <div><div class="text-sm font-bold text-gray-200">${log.name || 'Refeição'} ${isApprox ? '<i class="fa-solid fa-triangle-exclamation text-yellow-500 text-[10px]" title="Aproximado"></i>' : ''}</div><div class="text-xs text-gray-500 truncate w-40">${foodDesc}</div></div>
+                    <div><div class="text-sm font-bold text-gray-200">${log.name || 'Refeição'} ${isApprox ? '<i class="fa-solid fa-triangle-exclamation text-yellow-500 text-[10px]" title="Aproximado"></i>' : ''}${photoIcon}</div><div class="text-xs text-gray-500 truncate w-40">${foodDesc}</div></div>
                     <div class="text-right"><div class="text-sm font-bold text-white">${log.totals.kcal || 0} kcal</div><div class="text-[10px] text-gray-400 flex gap-2 font-mono"><span class="text-green-500">P:${log.totals.p || 0}</span><span class="text-blue-500">C:${log.totals.c || 0}</span><span class="text-yellow-500">G:${log.totals.f || 0}</span></div></div>`;
+                
+                // Se tiver foto, adiciona click para ver
+                if (log.photo) {
+                    el.style.cursor = 'pointer';
+                    el.addEventListener('click', () => showMealPhoto(log.photo));
+                }
+                
                 container.appendChild(el);
             });
         }
@@ -1483,6 +2056,62 @@
             // Check every minute
             const interval = setInterval(checkNotifications, 60000);
             notificationIntervals.push(interval);
+            
+            // Check intelligent notifications every 30 minutes
+            const intelligentInterval = setInterval(checkIntelligentNotifications, 30 * 60000);
+            notificationIntervals.push(intelligentInterval);
+        }
+
+        function checkIntelligentNotifications() {
+            const now = new Date();
+            const hour = now.getHours();
+            
+            // Só notifica entre 8h e 22h
+            if (hour < 8 || hour > 22) return;
+            
+            const t = dailyLog.total;
+            const g = userSettings;
+            
+            // Verifica se está muito abaixo da meta (menos de 50% e já é tarde)
+            if (hour >= 18) {
+                const pctCals = t.cals / g.cals;
+                if (pctCals < 0.5) {
+                    showNotification('⚠️ Atenção!', `Você está com apenas ${Math.round(pctCals * 100)}% das calorias do dia. Não esqueça de comer!`);
+                }
+                
+                const pctProt = t.prot / g.prot;
+                if (pctProt < 0.5) {
+                    showNotification('🥩 Proteína Baixa!', `Você está com apenas ${Math.round(pctProt * 100)}% da proteína do dia. Coma mais proteína!`);
+                }
+            }
+            
+            // Verifica se não registrou refeição há muito tempo
+            if (dailyLog.items && dailyLog.items.length > 0) {
+                const lastMeal = dailyLog.items[dailyLog.items.length - 1];
+                const lastMealTime = new Date(lastMeal.timestamp);
+                const hoursSinceLastMeal = (now - lastMealTime) / (1000 * 60 * 60);
+                
+                if (hoursSinceLastMeal >= 4 && hour >= 12 && hour <= 20) {
+                    showNotification('🍽️ Hora de Comer!', `Já se passaram ${Math.floor(hoursSinceLastMeal)} horas desde sua última refeição!`);
+                }
+            }
+            
+            // Verifica hidratação
+            const waterPct = (dailyLog.water || 0) / waterGoal;
+            if (hour >= 16 && waterPct < 0.5) {
+                showNotification('💧 Beba Água!', `Você bebeu apenas ${Math.round(waterPct * 100)}% da meta de água hoje!`);
+            }
+            
+            // Parabeniza se bateu a meta
+            if (t.cals >= g.cals * 0.95 && t.cals <= g.cals * 1.05 && t.prot >= g.prot * 0.95) {
+                const lastCongrats = localStorage.getItem('macromixer_last_congrats');
+                const today = new Date().toISOString().split('T')[0];
+                
+                if (lastCongrats !== today) {
+                    showNotification('🎉 Parabéns!', 'Você bateu suas metas de hoje! Continue assim!');
+                    localStorage.setItem('macromixer_last_congrats', today);
+                }
+            }
         }
 
         // Funções com Firebase
@@ -1613,6 +2242,13 @@
         document.getElementById('close-modal').addEventListener('click', () => document.getElementById('modal-result').classList.add('hidden'));
         document.getElementById('confirm-meal').addEventListener('click', pushMealToDB);
         document.getElementById('reset-day-btn').addEventListener('click', resetDay);
+        document.getElementById('reset-water-btn').addEventListener('click', resetWater);
+        document.getElementById('copy-yesterday-btn').addEventListener('click', copyYesterday);
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        document.getElementById('save-weight-btn').addEventListener('click', saveWeight);
+        document.getElementById('toggle-weight-chart-btn').addEventListener('click', toggleWeightChart);
+        document.getElementById('meal-photo-input').addEventListener('change', handlePhotoSelect);
+        document.getElementById('remove-photo-btn').addEventListener('click', removePhoto);
         
         const btnLogin = document.getElementById('btn-login');
         const btnLogout = document.getElementById('btn-logout');
@@ -1655,11 +2291,25 @@
         document.getElementById('export-json-btn').addEventListener('click', exportToJSON);
         
         // Initialize
-        console.log('🚀 === INICIALIZANDO APP v1.2 ===');
+        console.log('🚀 === INICIALIZANDO APP v2.1 ===');
+        loadTheme();
         updateDateDisplay();
         loadNotificationSettings();
         startNotificationScheduler();
+        loadWeightHistory();
         initAuth();
+        
+        // Register Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('✅ Service Worker registrado:', registration.scope);
+                })
+                .catch((error) => {
+                    console.error('❌ Erro ao registrar Service Worker:', error);
+                });
+        }
+        
         console.log('✅ === APP TOTALMENTE INICIALIZADO ===');
 
     </script>
