@@ -76,7 +76,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.2</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.2.1</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -1368,9 +1368,14 @@
             try {
                 const todayStr = new Date().toISOString().split('T')[0];
                 const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
-                await updateDoc(docRef, { water: dailyLog.water });
+                
+                // Usa setDoc com merge para criar ou atualizar
+                await setDoc(docRef, { water: dailyLog.water }, { merge: true });
             } catch (error) {
                 console.error('Erro ao salvar água:', error);
+                // Fallback para localStorage se falhar
+                const todayStr = new Date().toISOString().split('T')[0];
+                localStorage.setItem('macromixer_water_' + todayStr, dailyLog.water.toString());
             }
         }
 
