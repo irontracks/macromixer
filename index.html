@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 MacroMixer v3.3.0 - Dr. Carlos Edition</title>
+    <title>💪 MacroMixer v3.3.1 - Dr. Carlos Edition</title>
     <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
     <meta name="theme-color" content="#06b6d4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -276,38 +276,53 @@
             </div>
         </section>
 
-        <!-- Macros Distribution Chart -->
-        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-indigo-500">
-            <div class="flex justify-between items-center mb-3">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-indigo-400 text-lg"></i>
-                    <h2 class="text-sm font-bold text-white">Distribuição de Macros</h2>
-                </div>
-                <button id="toggle-macros-chart-btn" class="text-xs text-indigo-400 hover:text-indigo-300">
-                    <i class="fa-solid fa-eye mr-1"></i>Ver
-                </button>
+        <!-- Weekly History Section -->
+        <section id="history-section" class="glass-panel rounded-xl p-4 shadow-lg hidden border-l-4 border-purple-500">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-chart-line mr-2"></i>Histórico Semanal</h2>
+                <button id="close-history-btn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
             </div>
             
-            <div id="macros-chart-container" class="hidden">
-                <canvas id="macros-chart" class="w-full" height="200"></canvas>
-                <div class="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
-                    <div class="bg-green-900/20 rounded p-2 border border-green-700/30">
-                        <div class="text-green-400 font-bold" id="macro-prot-percent">0%</div>
-                        <div class="text-slate-400">Proteína</div>
-                    </div>
-                    <div class="bg-blue-900/20 rounded p-2 border border-blue-700/30">
-                        <div class="text-blue-400 font-bold" id="macro-carb-percent">0%</div>
-                        <div class="text-slate-400">Carbo</div>
-                    </div>
-                    <div class="bg-yellow-900/20 rounded p-2 border border-yellow-700/30">
-                        <div class="text-yellow-400 font-bold" id="macro-fat-percent">0%</div>
-                        <div class="text-slate-400">Gordura</div>
-                    </div>
+            <!-- Chart Container -->
+            <div class="bg-slate-900 rounded-lg p-4 mb-4">
+                <canvas id="weekly-chart" class="w-full" style="max-height: 250px;"></canvas>
+            </div>
+            
+            <!-- Weekly Summary -->
+            <div id="weekly-summary" class="space-y-2">
+                <!-- Dynamic content -->
+            </div>
+            
+            <!-- Export Options -->
+            <div class="mt-4 pt-4 border-t border-slate-700">
+                <h3 class="text-xs text-gray-400 uppercase font-bold mb-2">Exportar Dados</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="export-csv-btn" class="bg-green-700 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-file-csv mr-1"></i> CSV
+                    </button>
+                    <button id="export-json-btn" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-file-code mr-1"></i> JSON
+                    </button>
+                    <button id="export-image-btn" class="bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-image mr-1"></i> Imagem
+                    </button>
+                    <button id="export-pdf-btn" class="bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-file-pdf mr-1"></i> PDF
+                    </button>
                 </div>
             </div>
             
-            <div id="macros-chart-placeholder" class="text-center text-slate-500 text-xs py-4">
-                <i class="fa-solid fa-info-circle mr-1"></i>Adicione refeições para ver a distribuição
+            <!-- Compare Days -->
+            <div class="mt-4 pt-4 border-t border-slate-700">
+                <h3 class="text-xs text-gray-400 uppercase font-bold mb-2">Comparar Dias</h3>
+                <div class="flex gap-2">
+                    <select id="compare-day-select" class="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-2 text-xs text-white">
+                        <option value="">Selecione um dia...</option>
+                    </select>
+                    <button id="toggle-compare-btn" class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold py-2 px-3 rounded transition-all whitespace-nowrap">
+                        <i class="fa-solid fa-chart-line mr-1"></i> Comparar
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -509,56 +524,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Weekly History Section -->
-        <section id="history-section" class="glass-panel rounded-xl p-4 shadow-lg hidden border-l-4 border-purple-500">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-chart-line mr-2"></i>Histórico Semanal</h2>
-                <button id="close-history-btn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
-            </div>
-            
-            <!-- Chart Container -->
-            <div class="bg-slate-900 rounded-lg p-4 mb-4">
-                <canvas id="weekly-chart" class="w-full" style="max-height: 250px;"></canvas>
-            </div>
-            
-            <!-- Weekly Summary -->
-            <div id="weekly-summary" class="space-y-2">
-                <!-- Dynamic content -->
-            </div>
-            
-            <!-- Export Options -->
-            <div class="mt-4 pt-4 border-t border-slate-700">
-                <h3 class="text-xs text-gray-400 uppercase font-bold mb-2">Exportar Dados</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <button id="export-csv-btn" class="bg-green-700 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
-                        <i class="fa-solid fa-file-csv mr-1"></i> CSV
-                    </button>
-                    <button id="export-json-btn" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
-                        <i class="fa-solid fa-file-code mr-1"></i> JSON
-                    </button>
-                    <button id="export-image-btn" class="bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
-                        <i class="fa-solid fa-image mr-1"></i> Imagem
-                    </button>
-                    <button id="export-pdf-btn" class="bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
-                        <i class="fa-solid fa-file-pdf mr-1"></i> PDF
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Compare Days -->
-            <div class="mt-4 pt-4 border-t border-slate-700">
-                <h3 class="text-xs text-gray-400 uppercase font-bold mb-2">Comparar Dias</h3>
-                <div class="flex gap-2">
-                    <select id="compare-day-select" class="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-2 text-xs text-white">
-                        <option value="">Selecione um dia...</option>
-                    </select>
-                    <button id="toggle-compare-btn" class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold py-2 px-3 rounded transition-all whitespace-nowrap">
-                        <i class="fa-solid fa-chart-line mr-1"></i> Comparar
-                    </button>
-                </div>
-            </div>
-        </section>
 
         <!-- Notifications Section -->
         <section id="notifications-section" class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-orange-500">
@@ -980,18 +945,39 @@
         };
 
         // Verifica se há resultado de redirect (para PWA)
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result) {
-                    console.log('✅ Login via redirect bem-sucedido!', result.user);
-                }
-            })
-            .catch((error) => {
-                console.error('❌ Erro no redirect:', error);
-                if (error.code !== 'auth/popup-closed-by-user') {
-                    alert(`Erro ao fazer login: ${error.message}`);
-                }
-            });
+        // Usa flag temporária para evitar loops
+        const now = Date.now();
+        const lastCheck = localStorage.getItem('lastRedirectCheck');
+        
+        // Só verifica se passou mais de 5 segundos desde a última verificação
+        if (!lastCheck || (now - parseInt(lastCheck)) > 5000) {
+            localStorage.setItem('lastRedirectCheck', now.toString());
+            console.log('🔍 Verificando resultado de redirect...');
+            
+            getRedirectResult(auth)
+                .then((result) => {
+                    if (result) {
+                        console.log('✅ Login via redirect bem-sucedido!', result.user);
+                        // Limpa a flag após sucesso
+                        localStorage.removeItem('lastRedirectCheck');
+                    } else {
+                        console.log('ℹ️ Nenhum redirect pendente');
+                    }
+                })
+                .catch((error) => {
+                    console.error('❌ Erro no redirect:', error);
+                    // Limpa a flag após erro
+                    localStorage.removeItem('lastRedirectCheck');
+                    
+                    if (error.code !== 'auth/popup-closed-by-user' && 
+                        error.code !== 'auth/network-request-failed' &&
+                        error.code !== 'auth/internal-error') {
+                        alert(`Erro ao fazer login: ${error.message}`);
+                    }
+                });
+        } else {
+            console.log('⏭️ Pulando verificação de redirect (muito recente)');
+        }
 
         onAuthStateChanged(auth, (user) => {
             console.log('🔄 onAuthStateChanged disparado');
@@ -1057,7 +1043,7 @@
         });
 
         function initAuth() {
-            console.log('=== MacroMixer v3.3.0 - Dr. Carlos Edition ===');
+            console.log('=== MacroMixer v3.3.1 - Dr. Carlos Edition ===');
             console.log('Firebase Auth:', auth);
             console.log('Verificando elementos...');
             console.log('btn-login existe?', document.getElementById('btn-login'));
@@ -1623,11 +1609,6 @@
             setBar('bar-prot', t.prot, g.prot);
             setBar('bar-carb', t.carb, g.carb);
             setBar('bar-fat', t.fat, g.fat);
-            
-            // Atualiza gráfico de macros se estiver visível
-            if (!document.getElementById('macros-chart-container').classList.contains('hidden')) {
-                renderMacrosChart();
-            }
         }, 100); // Throttle de 100ms
 
         function setBar(id, val, max) {
@@ -3552,7 +3533,6 @@
         document.getElementById('edit-water-goal-btn').addEventListener('click', editWaterGoal);
         document.getElementById('copy-yesterday-btn').addEventListener('click', copyYesterday);
         document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-        document.getElementById('toggle-macros-chart-btn').addEventListener('click', toggleMacrosChart);
         document.getElementById('add-favorite-btn').addEventListener('click', saveFavoriteMeal);
         document.getElementById('open-gallery-btn').addEventListener('click', openGallery);
         document.getElementById('close-gallery-btn').addEventListener('click', closeGallery);
