@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 MacroMixer v3.3.2 - Dr. Carlos Edition</title>
+    <title>💪 MacroMixer v3.3.3 - Dr. Carlos Edition</title>
     <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
     <meta name="theme-color" content="#06b6d4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -1044,7 +1044,7 @@
         });
 
         function initAuth() {
-            console.log('=== MacroMixer v3.3.2 - Dr. Carlos Edition ===');
+            console.log('=== MacroMixer v3.3.3 - Dr. Carlos Edition ===');
             console.log('Firebase Auth:', auth);
             console.log('Verificando elementos...');
             console.log('btn-login existe?', document.getElementById('btn-login'));
@@ -1104,6 +1104,24 @@
                 dailyLog = saved;
                 if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
                 if (!dailyLog.water) dailyLog.water = 0;
+                if (!dailyLog.items) dailyLog.items = [];
+                
+                // Garante compatibilidade: adiciona campos cals/prot/carb/fat aos items antigos
+                dailyLog.items = dailyLog.items.map(item => {
+                    if (!item.cals && item.totals) {
+                        return {
+                            ...item,
+                            cals: item.totals.kcal || 0,
+                            prot: item.totals.p || 0,
+                            carb: item.totals.c || 0,
+                            fat: item.totals.f || 0
+                        };
+                    }
+                    return item;
+                });
+                
+                // Recalcula totais para garantir consistência
+                recalculateTotals();
             } else {
                 dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
             }
@@ -1244,6 +1262,24 @@
                     dailyLog = docSnap.data();
                     if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
                     if (!dailyLog.water) dailyLog.water = 0;
+                    if (!dailyLog.items) dailyLog.items = [];
+                    
+                    // Garante compatibilidade: adiciona campos cals/prot/carb/fat aos items antigos
+                    dailyLog.items = dailyLog.items.map(item => {
+                        if (!item.cals && item.totals) {
+                            return {
+                                ...item,
+                                cals: item.totals.kcal || 0,
+                                prot: item.totals.p || 0,
+                                carb: item.totals.c || 0,
+                                fat: item.totals.f || 0
+                            };
+                        }
+                        return item;
+                    });
+                    
+                    // Recalcula totais para garantir consistência
+                    recalculateTotals();
                 } else {
                     dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
                 }
@@ -1403,6 +1439,12 @@
                     else unitUsed = 'unidade';
 
                     foodName = line.replace(approxMatch[0], "").replace(" de ", " ").trim().toLowerCase();
+                    
+                    // Se foodName ficou vazio e a unidade é "ovo/ovos", usar a unidade como foodName
+                    if (!foodName && unitRaw.startsWith('ovo')) {
+                        foodName = unitRaw;
+                    }
+                    
                     wasApprox = true;
                 } else if (gramMatch) {
                     qtd = parseInt(gramMatch[1]);
