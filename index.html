@@ -76,7 +76,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.2.2</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.4.1</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -246,16 +246,16 @@
             </div>
             
             <div class="grid grid-cols-4 gap-2">
-                <button onclick="addWater(100)" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded transition-all border border-slate-700">
+                <button id="water-btn-100" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded transition-all border border-slate-700">
                     +100ml
                 </button>
-                <button onclick="addWater(250)" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded transition-all border border-slate-700">
+                <button id="water-btn-250" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded transition-all border border-slate-700">
                     +250ml
                 </button>
-                <button onclick="addWater(500)" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded transition-all">
+                <button id="water-btn-500" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded transition-all">
                     +500ml
                 </button>
-                <button onclick="addWater(1000)" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded transition-all">
+                <button id="water-btn-1000" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded transition-all">
                     +1L
                 </button>
             </div>
@@ -483,6 +483,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // --- DATABASE DE ALIMENTOS v2.2 - DR. CARLOS EDITION (Calibrado) ---
         // Base calibrada para Bodybuilding Enhanced
@@ -535,6 +536,9 @@
     "contra file": { c: 0, p: 32, f: 11, kcal: 240, unit: "Bife Alcatra/Contra (Grelhado) - 100g", approx: { bife: 120, pedaco: 100 } },
     "filé mignon": { c: 0, p: 32, f: 8, kcal: 200, unit: "Filé Mignon (Grelhado) - 100g", approx: { bife: 120, medalhao: 80 } },
     "file mignon": { c: 0, p: 32, f: 8, kcal: 200, unit: "Filé Mignon (Grelhado) - 100g", approx: { bife: 120, medalhao: 80 } },
+    "costela": { c: 0, p: 22.5, f: 32.0, kcal: 384, unit: "Costela Bovina (Assada/Churrasco) - 100g (Só Carne)", approx: { pedaco: 100, porcao: 150 } },
+    "costela bovina": { c: 0, p: 22.5, f: 32.0, kcal: 384, unit: "Costela Bovina (Assada/Churrasco) - 100g (Só Carne)", approx: { pedaco: 100, porcao: 150 } },
+    "costela assada": { c: 0, p: 22.5, f: 32.0, kcal: 384, unit: "Costela Bovina (Assada/Churrasco) - 100g (Só Carne)", approx: { pedaco: 100, porcao: 150 } },
     
     // Peixes
     "tilapia": { c: 0, p: 24, f: 2.0, kcal: 115, unit: "Tilápia (Grelhada) - 100g", approx: { file: 120, pedaco: 100 } },
@@ -641,17 +645,18 @@
 
         // --- FIREBASE SETUP ---
         const firebaseConfig = {
-            apiKey: "AIzaSyBfy01I69nNCABxnYSqK95e8TwGP1bSv2w",
-            authDomain: "irontracks-e6344.firebaseapp.com",
-            projectId: "irontracks-e6344",
-            storageBucket: "irontracks-e6344.firebasestorage.app",
-            messagingSenderId: "212508580918",
-            appId: "1:212508580918:web:dd55c3088fec86b8680c97"
+            apiKey: "AIzaSyDuLY3GI4pGLu6eRok77NyvaZsibi1g86U",
+            authDomain: "macromixer-free.firebaseapp.com",
+            projectId: "macromixer-free",
+            storageBucket: "macromixer-free.firebasestorage.app",
+            messagingSenderId: "398122075420",
+            appId: "1:398122075420:web:592791231c9e14ffc166d9"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
         const googleProvider = new GoogleAuthProvider();
         const appId = "macromixer-prod";
         
@@ -1021,34 +1026,73 @@
         async function pushMealToDB() {
             if (!currentUser || !tempMealAnalysis) return;
 
-            const newTotal = {
-                cals: dailyLog.total.cals + tempMealAnalysis.totals.kcal,
-                prot: dailyLog.total.prot + tempMealAnalysis.totals.p,
-                carb: dailyLog.total.carb + tempMealAnalysis.totals.c,
-                fat: dailyLog.total.fat + tempMealAnalysis.totals.f
+            // Função helper para garantir número válido
+            const safeNumber = (val) => {
+                const num = Number(val) || 0;
+                return isNaN(num) || !isFinite(num) ? 0 : Math.round(num * 10) / 10;
             };
 
-            const mealEntry = {
-                name: tempMealAnalysis.mealName || "Refeição",
-                timestamp: new Date().toISOString(),
-                foods: tempMealAnalysis.foods,
-                totals: tempMealAnalysis.totals,
-                isApproximate: tempMealAnalysis.isApproximate,
-                photo: currentMealPhoto || null
+            const newTotal = {
+                cals: safeNumber(dailyLog.total.cals + tempMealAnalysis.totals.kcal),
+                prot: safeNumber(dailyLog.total.prot + tempMealAnalysis.totals.p),
+                carb: safeNumber(dailyLog.total.carb + tempMealAnalysis.totals.c),
+                fat: safeNumber(dailyLog.total.fat + tempMealAnalysis.totals.f)
             };
+
+            // Limpa os foods para remover campos undefined ou complexos
+            const cleanFoods = tempMealAnalysis.foods.map(food => ({
+                name: String(food.name || "Desconhecido"),
+                rawName: String(food.rawName || ""),
+                qtd: safeNumber(food.qtd),
+                unitDisplay: String(food.unitDisplay || "g"),
+                macros: {
+                    p: safeNumber(food.macros?.p),
+                    c: safeNumber(food.macros?.c),
+                    f: safeNumber(food.macros?.f),
+                    kcal: safeNumber(food.macros?.kcal)
+                },
+                error: Boolean(food.error)
+            }));
+
+            const mealEntry = {
+                name: String(tempMealAnalysis.mealName || "Refeição"),
+                timestamp: new Date().toISOString(),
+                foods: cleanFoods,
+                totals: {
+                    p: safeNumber(tempMealAnalysis.totals.p),
+                    c: safeNumber(tempMealAnalysis.totals.c),
+                    f: safeNumber(tempMealAnalysis.totals.f),
+                    kcal: safeNumber(tempMealAnalysis.totals.kcal)
+                },
+                isApproximate: Boolean(tempMealAnalysis.isApproximate),
+                photo: String(currentMealPhoto || "")
+            };
+
+            console.log('📦 Dados a serem salvos:', JSON.stringify(mealEntry, null, 2));
 
             const todayStr = new Date().toISOString().split('T')[0];
             const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
             
-            if (dailyLog.items.length === 0) {
-                await setDoc(docRef, { items: [mealEntry], total: newTotal });
-            } else {
-                await updateDoc(docRef, { items: arrayUnion(mealEntry), total: newTotal });
-            }
+            try {
+                // Ao invés de arrayUnion, carrega o array atual e adiciona o novo item
+                const currentItems = dailyLog.items || [];
+                const updatedItems = [...currentItems, mealEntry];
                 
-            document.getElementById('meal-input').value = "";
-            document.getElementById('modal-result').classList.add('hidden');
-            removePhoto(); // Limpa foto após salvar
+                await setDoc(docRef, { 
+                    items: updatedItems, 
+                    total: newTotal,
+                    water: dailyLog.water || 0
+                }, { merge: true });
+                
+                console.log('✅ Refeição salva com sucesso!');
+                document.getElementById('meal-input').value = "";
+                document.getElementById('modal-result').classList.add('hidden');
+                removePhoto(); // Limpa foto após salvar
+            } catch (error) {
+                console.error('❌ Erro ao salvar refeição:', error);
+                console.error('📦 Dados que causaram erro:', mealEntry);
+                alert('⚠️ Erro ao salvar refeição. Verifique o console para mais detalhes.');
+            }
         }
         
         async function resetDay() {
@@ -1648,25 +1692,48 @@
             });
         }
 
-        // ==================== FOTO DAS REFEIÇÕES ====================
-        function handlePhotoSelect(event) {
+        // ==================== FOTO DAS REFEIÇÕES (FIREBASE STORAGE) ====================
+        async function handlePhotoSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
             
-            // Limita tamanho (max 2MB)
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Foto muito grande! Máximo 2MB.');
+            // Limita tamanho (max 12MB - iPhone 15 Pro Max tira fotos de até 10MB)
+            if (file.size > 12 * 1024 * 1024) {
+                alert('📸 Foto muito grande! Máximo 12MB.');
                 return;
             }
             
+            // Preview local enquanto faz upload
             const reader = new FileReader();
             reader.onload = function(e) {
-                currentMealPhoto = e.target.result;
-                document.getElementById('photo-preview-img').src = currentMealPhoto;
+                document.getElementById('photo-preview-img').src = e.target.result;
                 document.getElementById('photo-preview').classList.remove('hidden');
                 document.getElementById('remove-photo-btn').classList.remove('hidden');
             };
             reader.readAsDataURL(file);
+            
+            // Upload para Firebase Storage (se online)
+            if (currentUser && !useLocalStorage) {
+                try {
+                    const timestamp = Date.now();
+                    const fileName = `meal_${currentUser.uid}_${timestamp}.jpg`;
+                    const storageRef = ref(storage, `meal_photos/${fileName}`);
+                    
+                    console.log('📤 Fazendo upload da foto...');
+                    await uploadBytes(storageRef, file);
+                    const downloadURL = await getDownloadURL(storageRef);
+                    
+                    currentMealPhoto = downloadURL; // URL da foto no Storage
+                    console.log('✅ Foto enviada com sucesso!', downloadURL);
+                } catch (error) {
+                    console.error('❌ Erro ao fazer upload da foto:', error);
+                    alert('⚠️ Erro ao enviar foto. Continuando sem foto.');
+                    currentMealPhoto = null;
+                }
+            } else {
+                // Modo offline: salva base64 no localStorage (limitado)
+                currentMealPhoto = reader.result;
+            }
         }
 
         function removePhoto() {
@@ -1676,7 +1743,9 @@
             document.getElementById('meal-photo-input').value = '';
         }
 
-        function showMealPhoto(photoData) {
+        function showMealPhoto(photoURL) {
+            if (!photoURL) return;
+            
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4';
             modal.innerHTML = `
@@ -1684,7 +1753,7 @@
                     <button class="absolute -top-10 right-0 text-white text-2xl hover:text-gray-300" onclick="this.closest('.fixed').remove()">
                         <i class="fa-solid fa-times"></i>
                     </button>
-                    <img src="${photoData}" class="w-full rounded-lg shadow-2xl" />
+                    <img src="${photoURL}" class="w-full rounded-lg shadow-2xl" alt="Foto da Refeição" />
                 </div>
             `;
             document.body.appendChild(modal);
@@ -1704,13 +1773,14 @@
                 container.innerHTML = '<div class="text-center text-gray-600 py-4 italic text-sm">Nenhuma refeição hoje.</div>';
                 return;
             }
-            dailyLog.items.slice().reverse().forEach(log => {
+            dailyLog.items.slice().reverse().forEach((log, reverseIndex) => {
+                const actualIndex = dailyLog.items.length - 1 - reverseIndex;
                 const el = document.createElement('div');
                 // Proteção contra logs antigos sem isApproximate
                 const isApprox = log.isApproximate || false;
                 const borderClass = isApprox ? 'border-yellow-500' : 'border-cyan-500';
                 const bgClass = isApprox ? 'bg-yellow-900/10' : 'bg-slate-800/50';
-                el.className = `${bgClass} rounded-lg p-3 border-l-2 ${borderClass} flex justify-between items-center`;
+                el.className = `${bgClass} rounded-lg p-3 border-l-2 ${borderClass}`;
                 
                 // Proteção contra foods undefined
                 const foodDesc = (log.foods && log.foods.length > 0) 
@@ -1718,18 +1788,117 @@
                     : 'Refeição';
                     
                 const photoIcon = log.photo ? '<i class="fa-solid fa-camera text-cyan-400 text-[10px] ml-1" title="Com foto"></i>' : '';
-                el.innerHTML = `
-                    <div><div class="text-sm font-bold text-gray-200">${log.name || 'Refeição'} ${isApprox ? '<i class="fa-solid fa-triangle-exclamation text-yellow-500 text-[10px]" title="Aproximado"></i>' : ''}${photoIcon}</div><div class="text-xs text-gray-500 truncate w-40">${foodDesc}</div></div>
-                    <div class="text-right"><div class="text-sm font-bold text-white">${log.totals.kcal || 0} kcal</div><div class="text-[10px] text-gray-400 flex gap-2 font-mono"><span class="text-green-500">P:${log.totals.p || 0}</span><span class="text-blue-500">C:${log.totals.c || 0}</span><span class="text-yellow-500">G:${log.totals.f || 0}</span></div></div>`;
                 
-                // Se tiver foto, adiciona click para ver
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1" ${log.photo ? 'style="cursor: pointer;"' : ''}>
+                            <div class="text-sm font-bold text-gray-200">
+                                ${log.name || 'Refeição'} 
+                                ${isApprox ? '<i class="fa-solid fa-triangle-exclamation text-yellow-500 text-[10px]" title="Aproximado"></i>' : ''}
+                                ${photoIcon}
+                            </div>
+                            <div class="text-xs text-gray-500 truncate w-40">${foodDesc}</div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <div class="text-sm font-bold text-white">${log.totals.kcal || 0} kcal</div>
+                            <div class="text-[10px] text-gray-400 flex gap-2 font-mono">
+                                <span class="text-green-500">P:${log.totals.p || 0}</span>
+                                <span class="text-blue-500">C:${log.totals.c || 0}</span>
+                                <span class="text-yellow-500">G:${log.totals.f || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-2 pt-2 border-t border-slate-700">
+                        <button class="edit-meal-btn flex-1 bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-1 px-2 rounded transition-all" data-index="${actualIndex}">
+                            <i class="fa-solid fa-edit mr-1"></i>Editar
+                        </button>
+                        <button class="delete-meal-btn flex-1 bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-1 px-2 rounded transition-all" data-index="${actualIndex}">
+                            <i class="fa-solid fa-trash mr-1"></i>Deletar
+                        </button>
+                    </div>
+                `;
+                
+                // Se tiver foto, adiciona click para ver (apenas na área do nome)
                 if (log.photo) {
-                    el.style.cursor = 'pointer';
-                    el.addEventListener('click', () => showMealPhoto(log.photo));
+                    const nameArea = el.querySelector('.flex-1');
+                    nameArea.addEventListener('click', () => showMealPhoto(log.photo));
                 }
+                
+                // Event listeners para os botões
+                const editBtn = el.querySelector('.edit-meal-btn');
+                const deleteBtn = el.querySelector('.delete-meal-btn');
+                
+                editBtn.addEventListener('click', () => editMeal(actualIndex));
+                deleteBtn.addEventListener('click', () => deleteMeal(actualIndex));
                 
                 container.appendChild(el);
             });
+        }
+
+        // ==================== EDITAR E DELETAR REFEIÇÕES ====================
+        async function editMeal(index) {
+            const meal = dailyLog.items[index];
+            if (!meal) return;
+            
+            // Reconstrói o texto da refeição
+            const mealText = meal.foods.map(food => {
+                return `${food.qtd} ${food.unitDisplay} ${food.rawName}`;
+            }).join('\n');
+            
+            // Preenche o campo de entrada
+            document.getElementById('meal-input').value = mealText;
+            
+            // Remove a refeição antiga
+            await deleteMeal(index, false); // false = não atualizar UI ainda
+            
+            // Scroll para o topo
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            alert('✏️ Refeição carregada para edição! Faça as alterações e clique em "Calcular".');
+        }
+        
+        async function deleteMeal(index, updateUI = true) {
+            if (updateUI && !confirm('🗑️ Deletar esta refeição?')) return;
+            
+            const meal = dailyLog.items[index];
+            if (!meal) return;
+            
+            // Remove do array
+            dailyLog.items.splice(index, 1);
+            
+            // Recalcula total
+            dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
+            dailyLog.items.forEach(item => {
+                dailyLog.total.cals += item.totals.kcal || 0;
+                dailyLog.total.prot += item.totals.p || 0;
+                dailyLog.total.carb += item.totals.c || 0;
+                dailyLog.total.fat += item.totals.f || 0;
+            });
+            
+            // Salva no Firebase/localStorage
+            if (currentUser && !useLocalStorage) {
+                try {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+                    await setDoc(docRef, { 
+                        items: dailyLog.items, 
+                        total: dailyLog.total,
+                        water: dailyLog.water || 0
+                    }, { merge: true });
+                    console.log('✅ Refeição deletada com sucesso!');
+                } catch (error) {
+                    console.error('❌ Erro ao deletar refeição:', error);
+                    alert('⚠️ Erro ao deletar refeição.');
+                }
+            } else {
+                saveToLocalStorage();
+            }
+            
+            if (updateUI) {
+                renderLogs();
+                updateDashboard();
+                analyzeContext();
+            }
         }
 
         // --- DR CARLOS AI (VARIÁVEL) ---
@@ -2159,6 +2328,10 @@
         document.getElementById('confirm-meal').addEventListener('click', pushMealToDB);
         document.getElementById('reset-day-btn').addEventListener('click', resetDay);
         document.getElementById('reset-water-btn').addEventListener('click', resetWater);
+        document.getElementById('water-btn-100').addEventListener('click', () => addWater(100));
+        document.getElementById('water-btn-250').addEventListener('click', () => addWater(250));
+        document.getElementById('water-btn-500').addEventListener('click', () => addWater(500));
+        document.getElementById('water-btn-1000').addEventListener('click', () => addWater(1000));
         document.getElementById('copy-yesterday-btn').addEventListener('click', copyYesterday);
         document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
         document.getElementById('save-weight-btn').addEventListener('click', saveWeight);
