@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 MacroMixer v3.3.4 - Dr. Carlos Edition</title>
+    <title>💪 MacroMixer v3.3.5 - Dr. Carlos Edition</title>
     <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
     <meta name="theme-color" content="#06b6d4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -1044,7 +1044,7 @@
         });
 
         function initAuth() {
-            console.log('=== MacroMixer v3.3.4 - Dr. Carlos Edition ===');
+            console.log('=== MacroMixer v3.3.5 - Dr. Carlos Edition ===');
             console.log('Firebase Auth:', auth);
             console.log('Verificando elementos...');
             console.log('btn-login existe?', document.getElementById('btn-login'));
@@ -1350,10 +1350,17 @@
             dailyLog.total = newTotal;
             
             // Salva no Firebase ou localStorage
+            console.log('🔍 Verificando onde salvar:');
+            console.log('   currentUser:', currentUser ? currentUser.uid : 'null');
+            console.log('   useLocalStorage:', useLocalStorage);
+            
             if (currentUser && !useLocalStorage) {
                 try {
                     const todayStr = new Date().toISOString().split('T')[0];
                     const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+                    
+                    console.log('🔥 Salvando no Firebase...');
+                    console.log('   Documento:', `users/${currentUser.uid}/daily_logs/${todayStr}`);
                     
                     await setDoc(docRef, { 
                         items: dailyLog.items, 
@@ -1361,15 +1368,19 @@
                         water: dailyLog.water || 0
                     }, { merge: true });
                     
-                    console.log('✅ Refeição salva no Firebase!');
+                    console.log('✅ Refeição salva no Firebase com sucesso!');
                 } catch (error) {
                     console.error('❌ Erro ao salvar no Firebase:', error);
+                    console.error('   Detalhes:', error.message);
                     console.log('💾 Salvando no localStorage como fallback...');
-                    saveToLocalStorage();
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    saveToLocalStorage(`log_${todayStr}`, dailyLog);
                 }
             } else {
                 console.log('💾 Salvando no localStorage (modo offline)');
-                saveToLocalStorage();
+                console.log('   Motivo:', !currentUser ? 'Usuário não logado' : 'useLocalStorage = true');
+                const todayStr = new Date().toISOString().split('T')[0];
+                saveToLocalStorage(`log_${todayStr}`, dailyLog);
             }
             
             // Atualiza UI

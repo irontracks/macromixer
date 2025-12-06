@@ -1,5 +1,54 @@
 # MacroMixer - Changelog
 
+## v3.3.5 (2024-12-06 09:20) - BUGFIX CRÍTICO: Salvamento no localStorage corrigido 💾🔥
+
+### 🐛 Correção Crítica
+**Problema identificado pelo usuário:**
+- ✅ Refeição aparecia após adicionar
+- ❌ Desaparecia ao atualizar a página
+- ❌ Dados não persistiam
+
+**Causa raiz:**
+```javascript
+// ANTES (ERRADO):
+saveToLocalStorage();  // ← Chamada sem parâmetros!
+
+// Função esperava:
+function saveToLocalStorage(key, data) { ... }
+```
+
+**Solução:**
+```javascript
+// DEPOIS (CORRETO):
+const todayStr = new Date().toISOString().split('T')[0];
+saveToLocalStorage(`log_${todayStr}`, dailyLog);  // ← Com parâmetros corretos!
+```
+
+### 📊 Logs Detalhados Adicionados
+Agora o console mostra exatamente onde está salvando:
+```javascript
+🔍 Verificando onde salvar:
+   currentUser: null (ou uid)
+   useLocalStorage: true/false
+   
+💾 Salvando no localStorage (modo offline)
+   Motivo: Usuário não logado
+   
+OU
+
+🔥 Salvando no Firebase...
+   Documento: users/abc123/daily_logs/2024-12-06
+✅ Refeição salva no Firebase com sucesso!
+```
+
+### 🎯 Impacto
+- ✅ **Dados persistem** ao atualizar página
+- ✅ **localStorage funciona** corretamente
+- ✅ **Firebase funciona** corretamente
+- ✅ **Logs detalhados** para debug
+
+---
+
 ## v3.3.3 (2024-12-06 04:30) - BUGFIX: Ovos e Dashboard com dados antigos 🐛🔧
 
 ### 🐛 Correções Críticas
