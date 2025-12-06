@@ -1,5 +1,38 @@
 # MacroMixer - Changelog
 
+## v3.3.1 (2024-12-06 04:00) - UX MELHORADA: Histórico, Dashboard e PWA 🎨🔧
+
+### 🎨 Melhorias de UX/UI
+1. **Histórico agora abre logo abaixo de "HOJE"**
+   - Fluxo mais intuitivo: ver refeições → ver histórico
+   - Não precisa mais rolar a página até o final
+   - Melhor experiência em mobile
+
+2. **Seção "Distribuição de Macros" removida**
+   - Simplificação da interface
+   - Foco nas funcionalidades essenciais
+   - Menos poluição visual
+
+### 🐛 Correções Críticas
+1. **Dashboard "O que já foi consumido" corrigido**
+   - Removida referência ao elemento `macros-chart-container` deletado
+   - Dashboard atualiza corretamente após adicionar refeições
+   - Barras de progresso funcionando 100%
+
+2. **Loop de login no PWA corrigido**
+   - Implementado sistema de throttle (5 segundos)
+   - `getRedirectResult` não é mais chamado repetidamente
+   - Usa `localStorage` para controlar verificações
+   - Adiciona mais códigos de erro ignorados
+   - Login estável no PWA instalado
+
+### 🧹 Limpeza de Código
+- Removido event listener `toggle-macros-chart-btn` (botão não existe mais)
+- Removida seção HTML duplicada de histórico
+- Código mais limpo e performático
+
+---
+
 ## v3.3.0 (2024-12-06 03:30) - MEGA UPDATE: Fotos, Ovos, PWA e Correções 🚀📸
 
 ### 📸 Sistema de Fotos Melhorado
