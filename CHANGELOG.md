@@ -1,5 +1,48 @@
 # MacroMixer - Changelog
 
+## v3.3.3 (2024-12-06 04:30) - BUGFIX: Ovos e Dashboard com dados antigos 🐛🔧
+
+### 🐛 Correções Críticas
+1. **Ovos agora funcionam 100%**
+   - **Problema**: "3 ovos" resultava em `foodName` vazio
+   - **Causa**: Após remover "3 ovos" da linha, não sobrava nada
+   - **Solução**: Se `foodName` ficar vazio e a unidade for "ovo/ovos", usa a unidade como `foodName`
+   - **Resultado**: "3 ovos", "2 ovos cozidos", "4 ovos fritos" funcionam perfeitamente ✅
+
+2. **Dashboard agora carrega dados antigos do Firebase/localStorage**
+   - **Problema**: Refeições antigas não apareciam no dashboard
+   - **Causa**: Items antigos tinham apenas `totals.kcal`, faltavam campos `cals`, `prot`, `carb`, `fat`
+   - **Solução**: 
+     - Migração automática ao carregar dados
+     - Adiciona campos faltantes (`cals`, `prot`, `carb`, `fat`) aos items antigos
+     - Recalcula totais após migração
+   - **Resultado**: Dashboard mostra TODOS os dados, antigos e novos ✅
+
+### 🔄 Migração Automática
+```javascript
+// Detecta items antigos e adiciona campos faltantes
+dailyLog.items = dailyLog.items.map(item => {
+    if (!item.cals && item.totals) {
+        return {
+            ...item,
+            cals: item.totals.kcal,  // ← MIGRAÇÃO
+            prot: item.totals.p,
+            carb: item.totals.c,
+            fat: item.totals.f
+        };
+    }
+    return item;
+});
+```
+
+### 🎯 Impacto
+- ✅ Ovos reconhecidos em qualquer formato
+- ✅ Dashboard funciona com dados novos E antigos
+- ✅ Migração automática e transparente
+- ✅ Sem perda de dados históricos
+
+---
+
 ## v3.3.2 (2024-12-06 04:15) - BUGFIX CRÍTICO: Dashboard e Ovos 🐛🥚
 
 ### 🐛 Correções Críticas

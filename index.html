@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 MacroMixer v3.3.3 - Dr. Carlos Edition</title>
+    <title>💪 MacroMixer v3.3.4 - Dr. Carlos Edition</title>
     <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
     <meta name="theme-color" content="#06b6d4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -1044,7 +1044,7 @@
         });
 
         function initAuth() {
-            console.log('=== MacroMixer v3.3.3 - Dr. Carlos Edition ===');
+            console.log('=== MacroMixer v3.3.4 - Dr. Carlos Edition ===');
             console.log('Firebase Auth:', auth);
             console.log('Verificando elementos...');
             console.log('btn-login existe?', document.getElementById('btn-login'));
@@ -1373,6 +1373,7 @@
             }
             
             // Atualiza UI
+            console.log('📊 dailyLog.total após salvar:', dailyLog.total);
             renderLogs();
             updateDashboard();
             analyzeContext();
@@ -1383,6 +1384,7 @@
             removePhoto(); // Limpa foto após salvar
             
             console.log('✅ Refeição adicionada com sucesso!');
+            console.log('📊 Estado final do dailyLog:', dailyLog);
         }
         
         async function resetDay() {
@@ -1642,21 +1644,23 @@
         }
 
         const updateDashboard = throttle(function() {
-            const t = dailyLog.total;
+            const t = dailyLog.total || { cals: 0, prot: 0, carb: 0, fat: 0 };
             const g = userSettings;
             
-            document.getElementById('display-cals').innerText = t.cals;
-            document.getElementById('display-prot').innerText = t.prot;
-            document.getElementById('display-carb').innerText = t.carb;
-            document.getElementById('display-fat').innerText = t.fat;
+            console.log('📊 updateDashboard chamado:', t);
+            
+            document.getElementById('display-cals').innerText = t.cals || 0;
+            document.getElementById('display-prot').innerText = t.prot || 0;
+            document.getElementById('display-carb').innerText = t.carb || 0;
+            document.getElementById('display-fat').innerText = t.fat || 0;
 
-            const balance = g.cals - t.cals;
+            const balance = g.cals - (t.cals || 0);
             document.getElementById('saldo-cals').innerText = `BUFFER: ${balance}`;
             
-            setBar('bar-cals', t.cals, g.cals);
-            setBar('bar-prot', t.prot, g.prot);
-            setBar('bar-carb', t.carb, g.carb);
-            setBar('bar-fat', t.fat, g.fat);
+            setBar('bar-cals', t.cals || 0, g.cals);
+            setBar('bar-prot', t.prot || 0, g.prot);
+            setBar('bar-carb', t.carb || 0, g.carb);
+            setBar('bar-fat', t.fat || 0, g.fat);
         }, 100); // Throttle de 100ms
 
         function setBar(id, val, max) {
