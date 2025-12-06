@@ -15,6 +15,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -76,7 +78,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v2.4.2</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.2.0</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -222,6 +224,41 @@
             </div>
         </section>
 
+        <!-- Macros Distribution Chart -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-indigo-500">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-indigo-400 text-lg"></i>
+                    <h2 class="text-sm font-bold text-white">Distribuição de Macros</h2>
+                </div>
+                <button id="toggle-macros-chart-btn" class="text-xs text-indigo-400 hover:text-indigo-300">
+                    <i class="fa-solid fa-eye mr-1"></i>Ver
+                </button>
+            </div>
+            
+            <div id="macros-chart-container" class="hidden">
+                <canvas id="macros-chart" class="w-full" height="200"></canvas>
+                <div class="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
+                    <div class="bg-green-900/20 rounded p-2 border border-green-700/30">
+                        <div class="text-green-400 font-bold" id="macro-prot-percent">0%</div>
+                        <div class="text-slate-400">Proteína</div>
+                    </div>
+                    <div class="bg-blue-900/20 rounded p-2 border border-blue-700/30">
+                        <div class="text-blue-400 font-bold" id="macro-carb-percent">0%</div>
+                        <div class="text-slate-400">Carbo</div>
+                    </div>
+                    <div class="bg-yellow-900/20 rounded p-2 border border-yellow-700/30">
+                        <div class="text-yellow-400 font-bold" id="macro-fat-percent">0%</div>
+                        <div class="text-slate-400">Gordura</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="macros-chart-placeholder" class="text-center text-slate-500 text-xs py-4">
+                <i class="fa-solid fa-info-circle mr-1"></i>Adicione refeições para ver a distribuição
+            </div>
+        </section>
+
         <!-- Water Counter -->
         <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-blue-400">
             <div class="flex justify-between items-center mb-3">
@@ -309,6 +346,59 @@
             </div>
         </section>
 
+        <!-- Favorite Meals / Templates -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-amber-500">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-star text-amber-400 text-lg"></i>
+                    <h2 class="text-sm font-bold text-white">Refeições Favoritas</h2>
+                </div>
+                <button id="add-favorite-btn" class="text-xs text-amber-400 hover:text-amber-300">
+                    <i class="fa-solid fa-plus mr-1"></i>Salvar Atual
+                </button>
+            </div>
+            
+            <div id="favorites-container" class="space-y-2">
+                <div class="text-center text-slate-500 text-xs py-4">
+                    <i class="fa-solid fa-info-circle mr-1"></i>Nenhuma refeição favorita ainda
+                </div>
+            </div>
+        </section>
+
+        <!-- Photo Gallery -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-pink-500">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-images text-pink-400 text-lg"></i>
+                    <h2 class="text-sm font-bold text-white">Galeria de Fotos</h2>
+                </div>
+                <button id="open-gallery-btn" class="text-xs text-pink-400 hover:text-pink-300">
+                    <i class="fa-solid fa-expand mr-1"></i>Ver Todas
+                </button>
+            </div>
+            
+            <div id="gallery-preview" class="grid grid-cols-4 gap-2">
+                <div class="text-center text-slate-500 text-xs py-4 col-span-4">
+                    <i class="fa-solid fa-info-circle mr-1"></i>Nenhuma foto ainda
+                </div>
+            </div>
+        </section>
+
+        <!-- Achievements/Badges -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-yellow-500">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-yellow-400 text-lg"></i>
+                    <h2 class="text-sm font-bold text-white">Conquistas</h2>
+                </div>
+                <div class="text-xs text-yellow-400 font-bold" id="achievement-count">0/12</div>
+            </div>
+            
+            <div id="achievements-container" class="grid grid-cols-3 gap-3">
+                <!-- Achievements will be rendered here -->
+            </div>
+        </section>
+
         <!-- Suggestion Box (Dynamic) -->
         <div id="suggestion-box" class="hidden bg-slate-800 border-l-4 border-cyan-500 p-4 rounded text-sm text-gray-300 shadow-lg">
             <div class="flex items-start gap-3">
@@ -320,11 +410,102 @@
             </div>
         </div>
 
+        <!-- Share Modal -->
+        <div id="share-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-slate-800 rounded-xl w-full max-w-md border border-slate-700 shadow-2xl overflow-hidden transform transition-all">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-4 flex justify-between items-center">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-share-nodes"></i>Compartilhar Dia
+                    </h3>
+                    <button id="close-share-modal" class="text-white/80 hover:text-white">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="bg-slate-900 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-cyan-400" id="share-cals">0</div>
+                        <div class="text-xs text-gray-400">kcal consumidas</div>
+                        <div class="flex justify-around mt-3 text-sm">
+                            <div>
+                                <div class="font-bold text-green-400" id="share-prot">0g</div>
+                                <div class="text-xs text-gray-500">Proteína</div>
+                            </div>
+                            <div>
+                                <div class="font-bold text-blue-400" id="share-carb">0g</div>
+                                <div class="text-xs text-gray-500">Carbo</div>
+                            </div>
+                            <div>
+                                <div class="font-bold text-yellow-400" id="share-fat">0g</div>
+                                <div class="text-xs text-gray-500">Gordura</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="share-whatsapp" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2">
+                            <i class="fa-brands fa-whatsapp text-xl"></i>WhatsApp
+                        </button>
+                        <button id="share-copy" class="bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-copy"></i>Copiar
+                        </button>
+                    </div>
+                    
+                    <div class="text-xs text-center text-gray-500">
+                        <i class="fa-solid fa-info-circle mr-1"></i>Compartilhe seu progresso!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Modal -->
+        <div id="gallery-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-slate-800 rounded-xl w-full max-w-4xl border border-slate-700 shadow-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
+                <div class="bg-gradient-to-r from-pink-600 to-purple-600 p-4 flex justify-between items-center">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-images"></i>Galeria de Fotos
+                    </h3>
+                    <button id="close-gallery-btn" class="text-white/80 hover:text-white">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <div id="gallery-grid" class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto">
+                    <div class="text-center text-gray-500 text-sm py-8 col-span-full">
+                        <i class="fa-solid fa-info-circle mr-1"></i>Nenhuma foto ainda
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Permission Banner -->
+        <div id="notification-banner" class="hidden fixed bottom-20 left-4 right-4 max-w-md mx-auto bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 rounded-lg shadow-2xl z-40 animate-bounce">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid fa-bell text-2xl"></i>
+                <div class="flex-1">
+                    <div class="font-bold mb-1">Ativar Notificações?</div>
+                    <div class="text-xs opacity-90">Receba lembretes para não esquecer suas refeições!</div>
+                    <div class="flex gap-2 mt-3">
+                        <button id="enable-notifications" class="bg-white text-orange-600 px-4 py-1 rounded font-bold text-sm hover:bg-gray-100">
+                            Ativar
+                        </button>
+                        <button id="dismiss-notifications" class="bg-orange-800 px-4 py-1 rounded text-sm hover:bg-orange-900">
+                            Agora não
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Input Section -->
         <section class="glass-panel rounded-xl p-4 shadow-lg">
             <h2 class="text-gray-400 text-xs uppercase font-bold tracking-widest mb-3">Input de Refeição</h2>
             <div class="relative">
                 <textarea id="meal-input" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-all resize-none font-mono text-sm" placeholder="Digite aqui... Ex:&#10;5 colheres de arroz&#10;2 bifes medios&#10;3 ovos&#10;Whey 40g"></textarea>
+                
+                <!-- Autocomplete Dropdown -->
+                <div id="autocomplete-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl max-h-60 overflow-y-auto z-50">
+                    <!-- Suggestions will be inserted here -->
+                </div>
+                
                 <div class="absolute bottom-3 right-3">
                     <button id="btn-calculate" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white p-3 rounded-full shadow-lg transform hover:scale-105 transition-all w-12 h-12 flex items-center justify-center">
                         <i class="fa-solid fa-calculator"></i>
@@ -346,6 +527,7 @@
                     <button id="next-day-btn" class="text-cyan-400 hover:text-cyan-300"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
                 <div class="flex gap-2">
+                    <button id="share-day-btn" class="text-xs text-purple-400 hover:text-purple-300" title="Compartilhar dia"><i class="fa-solid fa-share-nodes"></i></button>
                     <button id="copy-yesterday-btn" class="text-xs text-green-400 hover:text-green-300" title="Copiar refeições de ontem"><i class="fa-solid fa-copy mr-1"></i>Copiar</button>
                     <button id="view-history-btn" class="text-xs text-cyan-400 hover:text-cyan-300"><i class="fa-solid fa-calendar-days mr-1"></i>Histórico</button>
                     <button id="reset-day-btn" class="text-xs text-red-400 hover:text-red-300"><i class="fa-solid fa-trash mr-1"></i>Zerar</button>
@@ -377,12 +559,31 @@
             <!-- Export Options -->
             <div class="mt-4 pt-4 border-t border-slate-700">
                 <h3 class="text-xs text-gray-400 uppercase font-bold mb-2">Exportar Dados</h3>
-                <div class="flex gap-2">
-                    <button id="export-csv-btn" class="flex-1 bg-green-700 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="export-csv-btn" class="bg-green-700 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
                         <i class="fa-solid fa-file-csv mr-1"></i> CSV
                     </button>
-                    <button id="export-json-btn" class="flex-1 bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                    <button id="export-json-btn" class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
                         <i class="fa-solid fa-file-code mr-1"></i> JSON
+                    </button>
+                    <button id="export-image-btn" class="bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-image mr-1"></i> Imagem
+                    </button>
+                    <button id="export-pdf-btn" class="bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded transition-all">
+                        <i class="fa-solid fa-file-pdf mr-1"></i> PDF
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Compare Days -->
+            <div class="mt-4 pt-4 border-t border-slate-700">
+                <h3 class="text-xs text-gray-400 uppercase font-bold mb-2">Comparar Dias</h3>
+                <div class="flex gap-2">
+                    <select id="compare-day-select" class="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-2 text-xs text-white">
+                        <option value="">Selecione um dia...</option>
+                    </select>
+                    <button id="toggle-compare-btn" class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold py-2 px-3 rounded transition-all whitespace-nowrap">
+                        <i class="fa-solid fa-chart-line mr-1"></i> Comparar
                     </button>
                 </div>
             </div>
@@ -474,6 +675,22 @@
                 <button id="confirm-meal" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-cyan-900/50">
                     Lançar na Dieta
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Modal -->
+    <div id="gallery-modal" class="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-xl w-full max-w-4xl border border-slate-700 shadow-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
+            <div class="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white"><i class="fa-solid fa-images text-pink-500 mr-2"></i>Galeria de Fotos</h3>
+                <button id="close-gallery-btn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+            
+            <div id="gallery-grid" class="p-4 overflow-y-auto grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div class="text-center text-slate-500 text-sm py-8 col-span-full">
+                    <i class="fa-solid fa-info-circle mr-1"></i>Nenhuma foto encontrada
+                </div>
             </div>
         </div>
     </div>
@@ -723,6 +940,8 @@
         let weightHistory = []; // Histórico de peso
         let weightChart = null; // Gráfico de peso
         let currentMealPhoto = null; // Foto temporária da refeição
+        let favoriteMeals = []; // Refeições favoritas
+        let macrosChart = null; // Gráfico de distribuição de macros
 
         // --- AUTH COM GOOGLE ---
         const handleLogin = async () => {
@@ -1104,6 +1323,7 @@
             renderLogs();
             updateDashboard();
             analyzeContext();
+            checkAchievements(); // Verifica conquistas
             
             document.getElementById('meal-input').value = "";
             document.getElementById('modal-result').classList.add('hidden');
@@ -1378,6 +1598,11 @@
             setBar('bar-prot', t.prot, g.prot);
             setBar('bar-carb', t.carb, g.carb);
             setBar('bar-fat', t.fat, g.fat);
+            
+            // Atualiza gráfico de macros se estiver visível
+            if (!document.getElementById('macros-chart-container').classList.contains('hidden')) {
+                renderMacrosChart();
+            }
         }, 100); // Throttle de 100ms
 
         function setBar(id, val, max) {
@@ -1396,6 +1621,7 @@
             console.log('💧 Água total:', dailyLog.water);
             updateWaterDisplay();
             saveWaterToFirebase();
+            checkAchievements(); // Verifica conquistas
         }
 
         function updateWaterDisplay() {
@@ -1709,6 +1935,319 @@
             });
         }
 
+        // ==================== REFEIÇÕES FAVORITAS ====================
+        async function loadFavoriteMeals() {
+            if (currentUser && !useLocalStorage) {
+                try {
+                    const docRef = doc(db, 'users', currentUser.uid, 'settings', 'favorites');
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        favoriteMeals = docSnap.data().meals || [];
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar favoritos:', error);
+                    const stored = localStorage.getItem('macromixer_favorites');
+                    favoriteMeals = stored ? JSON.parse(stored) : [];
+                }
+            } else {
+                const stored = localStorage.getItem('macromixer_favorites');
+                favoriteMeals = stored ? JSON.parse(stored) : [];
+            }
+            renderFavorites();
+        }
+
+        async function saveFavoriteMeal() {
+            if (!tempMealAnalysis) {
+                alert('⚠️ Calcule uma refeição primeiro!');
+                return;
+            }
+
+            const name = prompt('📝 Nome da refeição favorita:', tempMealAnalysis.mealName || 'Refeição');
+            if (!name) return;
+
+            const favorite = {
+                id: Date.now(),
+                name: name,
+                foods: tempMealAnalysis.foods,
+                totals: tempMealAnalysis.totals,
+                isApproximate: tempMealAnalysis.isApproximate,
+                createdAt: new Date().toISOString()
+            };
+
+            favoriteMeals.push(favorite);
+
+            // Salva no Firebase ou localStorage
+            if (currentUser && !useLocalStorage) {
+                try {
+                    const docRef = doc(db, 'users', currentUser.uid, 'settings', 'favorites');
+                    await setDoc(docRef, { meals: favoriteMeals }, { merge: true });
+                    console.log('✅ Favorito salvo no Firebase!');
+                } catch (error) {
+                    console.error('❌ Erro ao salvar favorito:', error);
+                    localStorage.setItem('macromixer_favorites', JSON.stringify(favoriteMeals));
+                }
+            } else {
+                localStorage.setItem('macromixer_favorites', JSON.stringify(favoriteMeals));
+            }
+
+            renderFavorites();
+            alert('⭐ Refeição salva nos favoritos!');
+        }
+
+        async function deleteFavorite(id) {
+            if (!confirm('🗑️ Deletar esta refeição favorita?')) return;
+
+            favoriteMeals = favoriteMeals.filter(f => f.id !== id);
+
+            // Salva no Firebase ou localStorage
+            if (currentUser && !useLocalStorage) {
+                try {
+                    const docRef = doc(db, 'users', currentUser.uid, 'settings', 'favorites');
+                    await setDoc(docRef, { meals: favoriteMeals }, { merge: true });
+                } catch (error) {
+                    console.error('❌ Erro ao deletar favorito:', error);
+                    localStorage.setItem('macromixer_favorites', JSON.stringify(favoriteMeals));
+                }
+            } else {
+                localStorage.setItem('macromixer_favorites', JSON.stringify(favoriteMeals));
+            }
+
+            renderFavorites();
+        }
+
+        function useFavorite(id) {
+            const favorite = favoriteMeals.find(f => f.id === id);
+            if (!favorite) return;
+
+            // Reconstrói o texto da refeição
+            const mealText = favorite.foods.map(food => {
+                return `${food.qtd} ${food.unitDisplay} ${food.rawName}`;
+            }).join('\n');
+
+            // Preenche o campo de entrada
+            document.getElementById('meal-input').value = mealText;
+
+            // Scroll para o topo
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            alert('✅ Refeição carregada! Clique em "Calcular" para adicionar.');
+        }
+
+        function renderFavorites() {
+            const container = document.getElementById('favorites-container');
+            
+            if (favoriteMeals.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-slate-500 text-xs py-4">
+                        <i class="fa-solid fa-info-circle mr-1"></i>Nenhuma refeição favorita ainda
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = favoriteMeals.map(fav => `
+                <div class="bg-slate-800/50 rounded-lg p-3 border border-amber-900/30">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-amber-400">${fav.name}</div>
+                            <div class="text-xs text-slate-400 mt-1">
+                                ${fav.totals.kcal} kcal | 
+                                P:${fav.totals.p}g C:${fav.totals.c}g G:${fav.totals.f}g
+                            </div>
+                        </div>
+                        <button onclick="deleteFavorite(${fav.id})" class="text-xs text-red-400 hover:text-red-300 ml-2">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    <button onclick="useFavorite(${fav.id})" class="w-full bg-amber-700 hover:bg-amber-600 text-white text-xs font-bold py-2 rounded transition-all">
+                        <i class="fa-solid fa-plus mr-1"></i>Usar Esta Refeição
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // ==================== GRÁFICO DE MACROS ====================
+        function toggleMacrosChart() {
+            const container = document.getElementById('macros-chart-container');
+            const placeholder = document.getElementById('macros-chart-placeholder');
+            
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                renderMacrosChart();
+            } else {
+                container.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        function renderMacrosChart() {
+            const t = dailyLog.total;
+            
+            // Calcula calorias de cada macro
+            const protCals = t.prot * 4;
+            const carbCals = t.carb * 4;
+            const fatCals = t.fat * 9;
+            const totalCals = protCals + carbCals + fatCals;
+            
+            if (totalCals === 0) {
+                document.getElementById('macros-chart-placeholder').classList.remove('hidden');
+                document.getElementById('macros-chart-container').classList.add('hidden');
+                return;
+            }
+            
+            // Calcula percentuais
+            const protPercent = ((protCals / totalCals) * 100).toFixed(1);
+            const carbPercent = ((carbCals / totalCals) * 100).toFixed(1);
+            const fatPercent = ((fatCals / totalCals) * 100).toFixed(1);
+            
+            // Atualiza percentuais
+            document.getElementById('macro-prot-percent').textContent = protPercent + '%';
+            document.getElementById('macro-carb-percent').textContent = carbPercent + '%';
+            document.getElementById('macro-fat-percent').textContent = fatPercent + '%';
+            
+            // Cria/atualiza gráfico
+            const ctx = document.getElementById('macros-chart').getContext('2d');
+            
+            if (macrosChart) {
+                macrosChart.destroy();
+            }
+            
+            macrosChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Proteína', 'Carboidrato', 'Gordura'],
+                    datasets: [{
+                        data: [protCals, carbCals, fatCals],
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',   // green
+                            'rgba(59, 130, 246, 0.8)',  // blue
+                            'rgba(234, 179, 8, 0.8)'    // yellow
+                        ],
+                        borderColor: [
+                            'rgba(34, 197, 94, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(234, 179, 8, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#cbd5e1',
+                                font: { size: 11 },
+                                padding: 10
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percent = ((value / totalCals) * 100).toFixed(1);
+                                    return `${label}: ${value.toFixed(0)} kcal (${percent}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==================== GALERIA DE FOTOS ====================
+        function openGallery() {
+            renderGallery();
+            document.getElementById('gallery-modal').classList.remove('hidden');
+        }
+
+        function closeGallery() {
+            document.getElementById('gallery-modal').classList.add('hidden');
+        }
+
+        function renderGallery() {
+            const grid = document.getElementById('gallery-grid');
+            const photos = [];
+            
+            // Coleta todas as fotos das refeições
+            dailyLog.items.forEach((meal, index) => {
+                if (meal.photo) {
+                    photos.push({
+                        url: meal.photo,
+                        name: meal.name,
+                        date: meal.timestamp,
+                        index: index
+                    });
+                }
+            });
+            
+            if (photos.length === 0) {
+                grid.innerHTML = `
+                    <div class="text-center text-slate-500 text-sm py-8 col-span-full">
+                        <i class="fa-solid fa-info-circle mr-1"></i>Nenhuma foto encontrada
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = photos.map(photo => `
+                <div class="relative group cursor-pointer" onclick="showMealPhoto('${photo.url}')">
+                    <img src="${photo.url}" class="w-full h-32 object-cover rounded-lg border border-slate-700" alt="${photo.name}" />
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-search-plus text-white text-2xl"></i>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-lg">
+                        <div class="text-white text-xs font-bold truncate">${photo.name}</div>
+                        <div class="text-slate-300 text-[10px]">${new Date(photo.date).toLocaleDateString('pt-BR')}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Atualiza preview na seção principal
+            renderGalleryPreview(photos);
+        }
+
+        function renderGalleryPreview(photos = null) {
+            const preview = document.getElementById('gallery-preview');
+            
+            if (!photos) {
+                photos = [];
+                dailyLog.items.forEach(meal => {
+                    if (meal.photo) {
+                        photos.push({
+                            url: meal.photo,
+                            name: meal.name
+                        });
+                    }
+                });
+            }
+            
+            if (photos.length === 0) {
+                preview.innerHTML = `
+                    <div class="text-center text-slate-500 text-xs py-4 col-span-4">
+                        <i class="fa-solid fa-info-circle mr-1"></i>Nenhuma foto ainda
+                    </div>
+                `;
+                return;
+            }
+            
+            // Mostra até 4 fotos mais recentes
+            const recentPhotos = photos.slice(-4);
+            preview.innerHTML = recentPhotos.map(photo => `
+                <div class="relative group cursor-pointer" onclick="showMealPhoto('${photo.url}')">
+                    <img src="${photo.url}" class="w-full h-16 object-cover rounded border border-slate-700" alt="${photo.name}" />
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                        <i class="fa-solid fa-search-plus text-white text-sm"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         // ==================== FOTO DAS REFEIÇÕES (FIREBASE STORAGE) ====================
         async function handlePhotoSelect(event) {
             const file = event.target.files[0];
@@ -1850,6 +2389,9 @@
                 
                 container.appendChild(el);
             });
+            
+            // Atualiza galeria de fotos
+            renderGalleryPreview();
         }
 
         // ==================== EDITAR E DELETAR REFEIÇÕES ====================
@@ -2024,28 +2566,51 @@
             
             if (weeklyChart) weeklyChart.destroy();
             
+            const datasets = [
+                {
+                    label: 'Calorias',
+                    data: weekData.map(d => d.total.cals),
+                    borderColor: 'rgb(168, 85, 247)',
+                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                    tension: 0.4,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Proteína (g)',
+                    data: weekData.map(d => d.total.prot),
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    yAxisID: 'y1'
+                }
+            ];
+            
+            // Add comparison if selected
+            if (comparisonDay) {
+                const comparisonData = weekData.find(d => d.date === comparisonDay);
+                if (comparisonData) {
+                    const comparisonIndex = weekData.findIndex(d => d.date === comparisonDay);
+                    
+                    // Highlight comparison day
+                    datasets.push({
+                        label: `Comparação: ${comparisonDay}`,
+                        data: weekData.map((d, i) => i === comparisonIndex ? d.total.cals : null),
+                        borderColor: 'rgb(251, 191, 36)',
+                        backgroundColor: 'rgba(251, 191, 36, 0.3)',
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
+                        yAxisID: 'y',
+                        borderWidth: 3,
+                        borderDash: [5, 5]
+                    });
+                }
+            }
+            
             weeklyChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: weekData.map(d => d.label),
-                    datasets: [
-                        {
-                            label: 'Calorias',
-                            data: weekData.map(d => d.total.cals),
-                            borderColor: 'rgb(168, 85, 247)',
-                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                            tension: 0.4,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Proteína (g)',
-                            data: weekData.map(d => d.total.prot),
-                            borderColor: 'rgb(34, 197, 94)',
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                            tension: 0.4,
-                            yAxisID: 'y1'
-                        }
-                    ]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
@@ -2054,6 +2619,21 @@
                     plugins: {
                         legend: { 
                             labels: { color: '#e2e8f0', font: { size: 10 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    if (comparisonDay && context.datasetIndex === 2) {
+                                        const dayData = weekData[context.dataIndex];
+                                        return [
+                                            `Proteína: ${Math.round(dayData.total.prot)}g`,
+                                            `Carbos: ${Math.round(dayData.total.carb)}g`,
+                                            `Gordura: ${Math.round(dayData.total.fat)}g`
+                                        ];
+                                    }
+                                    return '';
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -2334,6 +2914,585 @@
             document.body.removeChild(link);
         }
 
+        // --- SHARE FUNCTIONS ---
+        function openShareModal() {
+            document.getElementById('share-cals').textContent = Math.round(dailyLog.total.cals);
+            document.getElementById('share-prot').textContent = Math.round(dailyLog.total.prot) + 'g';
+            document.getElementById('share-carb').textContent = Math.round(dailyLog.total.carb) + 'g';
+            document.getElementById('share-fat').textContent = Math.round(dailyLog.total.fat) + 'g';
+            document.getElementById('share-modal').classList.remove('hidden');
+        }
+
+        function closeShareModal() {
+            document.getElementById('share-modal').classList.add('hidden');
+        }
+
+        function generateShareText() {
+            const date = currentViewDate.toLocaleDateString('pt-BR');
+            const cals = Math.round(dailyLog.total.cals);
+            const prot = Math.round(dailyLog.total.prot);
+            const carb = Math.round(dailyLog.total.carb);
+            const fat = Math.round(dailyLog.total.fat);
+            const meals = dailyLog.items.length;
+            const water = dailyLog.water || 0;
+            
+            const goalPercent = userSettings.cals > 0 ? Math.round((cals / userSettings.cals) * 100) : 0;
+            
+            return `🔥 *MacroMixer - ${date}*\n\n` +
+                   `📊 *Resumo do Dia:*\n` +
+                   `🍽️ ${meals} refeições registradas\n` +
+                   `💧 ${water}ml de água\n\n` +
+                   `⚡ *Macros:*\n` +
+                   `• ${cals} kcal (${goalPercent}% da meta)\n` +
+                   `• ${prot}g Proteína 💪\n` +
+                   `• ${carb}g Carboidrato 🍚\n` +
+                   `• ${fat}g Gordura 🥑\n\n` +
+                   `✨ _Rastreado com MacroMixer - Dr. Carlos Edition_`;
+        }
+
+        function shareToWhatsApp() {
+            const text = generateShareText();
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+            closeShareModal();
+        }
+
+        function copyShareText() {
+            const text = generateShareText();
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Texto copiado! Cole onde quiser.');
+                closeShareModal();
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                alert('❌ Erro ao copiar texto.');
+            });
+        }
+
+        // --- PUSH NOTIFICATIONS ---
+        let notificationPermission = 'default';
+        
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                console.log('Notificações não suportadas neste navegador');
+                return false;
+            }
+            
+            if (Notification.permission === 'granted') {
+                notificationPermission = 'granted';
+                return true;
+            }
+            
+            if (Notification.permission !== 'denied') {
+                const permission = await Notification.requestPermission();
+                notificationPermission = permission;
+                return permission === 'granted';
+            }
+            
+            return false;
+        }
+
+        function showNotification(title, body, icon = '🍽️') {
+            if (notificationPermission !== 'granted') return;
+            
+            try {
+                new Notification(title, {
+                    body: body,
+                    icon: './icon-192.svg',
+                    badge: './icon-192.svg',
+                    tag: 'macromixer-reminder',
+                    requireInteraction: false,
+                    silent: false
+                });
+            } catch (error) {
+                console.error('Erro ao mostrar notificação:', error);
+            }
+        }
+
+        function checkMealReminders() {
+            const now = new Date();
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            // Verifica se já comeu hoje
+            const hasEatenToday = dailyLog.items.length > 0;
+            const lastMealTime = hasEatenToday ? new Date(dailyLog.items[dailyLog.items.length - 1].timestamp) : null;
+            const hoursSinceLastMeal = lastMealTime ? (now - lastMealTime) / (1000 * 60 * 60) : 999;
+            
+            // Notificação de café da manhã
+            if (notificationSettings.breakfast.enabled && currentTime === notificationSettings.breakfast.time) {
+                if (!hasEatenToday || hoursSinceLastMeal > 3) {
+                    showNotification('☕ Hora do Café da Manhã!', 'Não esqueça de registrar sua primeira refeição do dia.');
+                }
+            }
+            
+            // Notificação de almoço
+            if (notificationSettings.lunch.enabled && currentTime === notificationSettings.lunch.time) {
+                if (hoursSinceLastMeal > 3) {
+                    showNotification('🍽️ Hora do Almoço!', 'Já passou da hora de comer. Registre sua refeição!');
+                }
+            }
+            
+            // Notificação de jantar
+            if (notificationSettings.dinner.enabled && currentTime === notificationSettings.dinner.time) {
+                if (hoursSinceLastMeal > 4) {
+                    showNotification('🌙 Hora do Jantar!', 'Última refeição do dia. Não esqueça de registrar!');
+                }
+            }
+            
+            // Notificação inteligente de água
+            if (dailyLog.water < waterGoal && now.getHours() >= 10 && now.getHours() <= 20) {
+                const waterPercent = (dailyLog.water / waterGoal) * 100;
+                if (waterPercent < 50 && now.getMinutes() === 0) { // A cada hora cheia
+                    showNotification('💧 Beba Água!', `Você está em ${Math.round(waterPercent)}% da meta de água.`);
+                }
+            }
+        }
+
+        function showNotificationBanner() {
+            if (Notification.permission === 'default' && !localStorage.getItem('notification-dismissed')) {
+                setTimeout(() => {
+                    document.getElementById('notification-banner').classList.remove('hidden');
+                }, 5000); // Mostra após 5 segundos
+            }
+        }
+
+        function enableNotifications() {
+            requestNotificationPermission().then(granted => {
+                if (granted) {
+                    document.getElementById('notification-banner').classList.add('hidden');
+                    showNotification('🎉 Notificações Ativadas!', 'Você receberá lembretes para suas refeições.');
+                }
+            });
+        }
+
+        function dismissNotificationBanner() {
+            document.getElementById('notification-banner').classList.add('hidden');
+            localStorage.setItem('notification-dismissed', 'true');
+        }
+
+        // --- GALLERY FUNCTIONS ---
+        function openGallery() {
+            const galleryGrid = document.getElementById('gallery-grid');
+            const allPhotos = [];
+            
+            // Coleta todas as fotos das refeições
+            dailyLog.items.forEach((item, index) => {
+                if (item.photo) {
+                    allPhotos.push({
+                        url: item.photo,
+                        meal: item.name,
+                        timestamp: item.timestamp,
+                        index: index
+                    });
+                }
+            });
+            
+            if (allPhotos.length === 0) {
+                galleryGrid.innerHTML = `
+                    <div class="text-center text-gray-500 text-sm py-8 col-span-full">
+                        <i class="fa-solid fa-info-circle mr-1"></i>Nenhuma foto ainda
+                    </div>
+                `;
+            } else {
+                galleryGrid.innerHTML = allPhotos.map(photo => `
+                    <div class="relative group cursor-pointer" onclick="window.open('${photo.url}', '_blank')">
+                        <img src="${photo.url}" alt="${photo.meal}" class="w-full h-32 object-cover rounded-lg border-2 border-slate-700 group-hover:border-pink-500 transition-all">
+                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-expand text-white text-2xl"></i>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-lg">
+                            <div class="text-xs text-white font-bold truncate">${photo.meal}</div>
+                            <div class="text-xs text-gray-300">${new Date(photo.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            document.getElementById('gallery-modal').classList.remove('hidden');
+        }
+
+        function closeGallery() {
+            document.getElementById('gallery-modal').classList.add('hidden');
+        }
+
+        function updateGalleryPreview() {
+            const galleryPreview = document.getElementById('gallery-preview');
+            const recentPhotos = dailyLog.items
+                .filter(item => item.photo)
+                .slice(-4)
+                .reverse();
+            
+            if (recentPhotos.length === 0) {
+                galleryPreview.innerHTML = `
+                    <div class="text-center text-slate-500 text-xs py-4 col-span-4">
+                        <i class="fa-solid fa-info-circle mr-1"></i>Nenhuma foto ainda
+                    </div>
+                `;
+            } else {
+                galleryPreview.innerHTML = recentPhotos.map(item => `
+                    <div class="relative group cursor-pointer" onclick="window.open('${item.photo}', '_blank')">
+                        <img src="${item.photo}" alt="${item.name}" class="w-full h-20 object-cover rounded-lg border-2 border-slate-700 group-hover:border-pink-500 transition-all">
+                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-expand text-white text-lg"></i>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // --- REPORT GENERATION ---
+        async function exportAsImage() {
+            const historySection = document.getElementById('history-section');
+            
+            if (historySection.classList.contains('hidden')) {
+                alert('⚠️ Abra o histórico semanal primeiro!');
+                return;
+            }
+            
+            try {
+                const canvas = await html2canvas(historySection, {
+                    backgroundColor: '#0f172a',
+                    scale: 2,
+                    logging: false
+                });
+                
+                const link = document.createElement('a');
+                link.download = `macromixer_report_${new Date().toISOString().split('T')[0]}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                alert('✅ Imagem salva com sucesso!');
+            } catch (error) {
+                console.error('Erro ao gerar imagem:', error);
+                alert('❌ Erro ao gerar imagem. Tente novamente.');
+            }
+        }
+
+        async function exportAsPDF() {
+            const historySection = document.getElementById('history-section');
+            
+            if (historySection.classList.contains('hidden')) {
+                alert('⚠️ Abra o histórico semanal primeiro!');
+                return;
+            }
+            
+            try {
+                const canvas = await html2canvas(historySection, {
+                    backgroundColor: '#0f172a',
+                    scale: 2,
+                    logging: false
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                const imgWidth = 210; // A4 width in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                pdf.save(`macromixer_report_${new Date().toISOString().split('T')[0]}.pdf`);
+                
+                alert('✅ PDF salvo com sucesso!');
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                alert('❌ Erro ao gerar PDF. Tente novamente.');
+            }
+        }
+
+        // --- DAY COMPARISON ---
+        let comparisonDay = null;
+        let comparisonChart = null;
+
+        async function loadCompareDayOptions() {
+            const select = document.getElementById('compare-day-select');
+            const weekData = await loadWeeklyData();
+            
+            select.innerHTML = '<option value="">Selecione um dia...</option>';
+            
+            weekData.forEach(day => {
+                if (day.total.cals > 0) {
+                    const option = document.createElement('option');
+                    option.value = day.date;
+                    option.textContent = `${day.date} (${Math.round(day.total.cals)} kcal)`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function toggleComparison() {
+            const select = document.getElementById('compare-day-select');
+            const selectedDate = select.value;
+            
+            if (!selectedDate) {
+                alert('⚠️ Selecione um dia para comparar!');
+                return;
+            }
+            
+            if (comparisonDay === selectedDate) {
+                // Remove comparison
+                comparisonDay = null;
+                renderWeeklyChart();
+                document.getElementById('toggle-compare-btn').innerHTML = '<i class="fa-solid fa-chart-line mr-1"></i> Comparar';
+            } else {
+                // Add comparison
+                comparisonDay = selectedDate;
+                renderWeeklyChart();
+                document.getElementById('toggle-compare-btn').innerHTML = '<i class="fa-solid fa-times mr-1"></i> Remover';
+            }
+        }
+
+        // --- ACHIEVEMENTS SYSTEM ---
+        const achievements = [
+            { id: 'first_meal', name: 'Primeira Refeição', description: 'Registre sua primeira refeição', icon: '🍽️', condition: () => dailyLog.items.length >= 1 },
+            { id: 'streak_3', name: '3 Dias Seguidos', description: 'Registre refeições por 3 dias consecutivos', icon: '🔥', condition: () => getStreak() >= 3 },
+            { id: 'streak_7', name: 'Semana Completa', description: '7 dias de registro', icon: '⭐', condition: () => getStreak() >= 7 },
+            { id: 'streak_30', name: 'Mês Completo', description: '30 dias de registro', icon: '👑', condition: () => getStreak() >= 30 },
+            { id: 'protein_goal', name: 'Meta de Proteína', description: 'Atinja sua meta de proteína', icon: '💪', condition: () => dailyLog.total.prot >= userSettings.prot },
+            { id: 'calorie_goal', name: 'Meta de Calorias', description: 'Atinja sua meta de calorias', icon: '🎯', condition: () => Math.abs(dailyLog.total.cals - userSettings.cals) <= 100 },
+            { id: 'water_goal', name: 'Hidratação Completa', description: 'Beba 3L de água', icon: '💧', condition: () => dailyLog.water >= 3000 },
+            { id: 'photo_meal', name: 'Fotógrafo', description: 'Registre uma refeição com foto', icon: '📸', condition: () => dailyLog.items.some(item => item.photo) },
+            { id: 'favorite_meal', name: 'Chef Favorito', description: 'Salve uma refeição favorita', icon: '⭐', condition: () => favoriteMeals.length >= 1 },
+            { id: 'meals_5', name: '5 Refeições', description: 'Registre 5 refeições em um dia', icon: '🍴', condition: () => dailyLog.items.length >= 5 },
+            { id: 'perfect_day', name: 'Dia Perfeito', description: 'Atinja todas as metas em um dia', icon: '✨', condition: () => {
+                return dailyLog.total.prot >= userSettings.prot &&
+                       dailyLog.total.carb >= userSettings.carb &&
+                       dailyLog.total.fat >= userSettings.fat &&
+                       Math.abs(dailyLog.total.cals - userSettings.cals) <= 100 &&
+                       dailyLog.water >= 3000;
+            }},
+            { id: 'early_bird', name: 'Madrugador', description: 'Registre café antes das 8h', icon: '🌅', condition: () => {
+                return dailyLog.items.some(item => {
+                    const hour = new Date(item.timestamp).getHours();
+                    return hour < 8;
+                });
+            }}
+        ];
+
+        let unlockedAchievements = [];
+
+        function loadAchievements() {
+            const saved = localStorage.getItem('achievements');
+            unlockedAchievements = saved ? JSON.parse(saved) : [];
+        }
+
+        function saveAchievements() {
+            localStorage.setItem('achievements', JSON.stringify(unlockedAchievements));
+        }
+
+        function checkAchievements() {
+            let newUnlocks = [];
+            
+            achievements.forEach(achievement => {
+                if (!unlockedAchievements.includes(achievement.id) && achievement.condition()) {
+                    unlockedAchievements.push(achievement.id);
+                    newUnlocks.push(achievement);
+                }
+            });
+            
+            if (newUnlocks.length > 0) {
+                saveAchievements();
+                newUnlocks.forEach(achievement => {
+                    showAchievementNotification(achievement);
+                });
+            }
+            
+            renderAchievements();
+        }
+
+        function renderAchievements() {
+            const container = document.getElementById('achievements-container');
+            const count = document.getElementById('achievement-count');
+            
+            count.textContent = `${unlockedAchievements.length}/${achievements.length}`;
+            
+            container.innerHTML = achievements.map(achievement => {
+                const unlocked = unlockedAchievements.includes(achievement.id);
+                return `
+                    <div class="text-center p-3 rounded-lg ${unlocked ? 'bg-yellow-900/30 border-2 border-yellow-500' : 'bg-slate-800/50 border-2 border-slate-700 opacity-50'} transition-all">
+                        <div class="text-3xl mb-1">${achievement.icon}</div>
+                        <div class="text-xs font-bold text-white truncate">${achievement.name}</div>
+                        <div class="text-[10px] text-gray-400 truncate">${achievement.description}</div>
+                        ${unlocked ? '<div class="text-[10px] text-yellow-400 mt-1">✓ Conquistado</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showAchievementNotification(achievement) {
+            // Notificação visual
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-20 right-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white p-4 rounded-lg shadow-2xl z-50 animate-bounce';
+            notification.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="text-4xl">${achievement.icon}</div>
+                    <div>
+                        <div class="font-bold">🎉 Nova Conquista!</div>
+                        <div class="text-sm">${achievement.name}</div>
+                        <div class="text-xs opacity-80">${achievement.description}</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+            
+            // Notificação do navegador
+            if (notificationPermission === 'granted') {
+                showNotification(`🎉 Nova Conquista: ${achievement.name}`, achievement.description, achievement.icon);
+            }
+        }
+
+        function getStreak() {
+            // Calcula quantos dias consecutivos o usuário registrou refeições
+            let streak = 0;
+            let currentDate = new Date();
+            
+            for (let i = 0; i < 365; i++) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                const log = loadFromLocalStorage('log_' + dateStr);
+                
+                if (log && log.items && log.items.length > 0) {
+                    streak++;
+                    currentDate.setDate(currentDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+            
+            return streak;
+        }
+
+        // --- AUTOCOMPLETE FUNCTIONS ---
+        let autocompleteTimeout = null;
+        let currentSuggestions = [];
+        let selectedSuggestionIndex = -1;
+
+        function getLastWord(text) {
+            const lines = text.split('\n');
+            const lastLine = lines[lines.length - 1];
+            const words = lastLine.trim().split(/\s+/);
+            return words[words.length - 1].toLowerCase();
+        }
+
+        function searchFoods(query) {
+            if (!query || query.length < 2) return [];
+            
+            const results = [];
+            const queryLower = query.toLowerCase();
+            
+            for (const [key, value] of Object.entries(foodDatabase)) {
+                if (key.includes(queryLower)) {
+                    results.push({
+                        key: key,
+                        name: value.unit,
+                        macros: `P:${value.p}g C:${value.c}g G:${value.f}g ${value.kcal}kcal`
+                    });
+                }
+                if (results.length >= 10) break; // Limita a 10 resultados
+            }
+            
+            return results;
+        }
+
+        function showAutocomplete(suggestions) {
+            const dropdown = document.getElementById('autocomplete-dropdown');
+            
+            if (suggestions.length === 0) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+            
+            currentSuggestions = suggestions;
+            selectedSuggestionIndex = -1;
+            
+            dropdown.innerHTML = suggestions.map((item, index) => `
+                <div class="autocomplete-item p-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-b-0 ${index === selectedSuggestionIndex ? 'bg-slate-700' : ''}" data-index="${index}">
+                    <div class="font-bold text-white text-sm">${item.name}</div>
+                    <div class="text-xs text-gray-400 font-mono">${item.macros}</div>
+                </div>
+            `).join('');
+            
+            dropdown.classList.remove('hidden');
+            
+            // Add click listeners
+            dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const index = parseInt(item.getAttribute('data-index'));
+                    selectSuggestion(index);
+                });
+            });
+        }
+
+        function selectSuggestion(index) {
+            if (index < 0 || index >= currentSuggestions.length) return;
+            
+            const suggestion = currentSuggestions[index];
+            const textarea = document.getElementById('meal-input');
+            const text = textarea.value;
+            const lines = text.split('\n');
+            const lastLine = lines[lines.length - 1];
+            const words = lastLine.trim().split(/\s+/);
+            
+            // Remove a última palavra (parcial) e adiciona a sugestão
+            words.pop();
+            words.push(suggestion.key);
+            lines[lines.length - 1] = words.join(' ');
+            
+            textarea.value = lines.join('\n');
+            textarea.focus();
+            
+            hideAutocomplete();
+        }
+
+        function hideAutocomplete() {
+            document.getElementById('autocomplete-dropdown').classList.add('hidden');
+            currentSuggestions = [];
+            selectedSuggestionIndex = -1;
+        }
+
+        function handleAutocompleteInput(e) {
+            clearTimeout(autocompleteTimeout);
+            
+            const lastWord = getLastWord(e.target.value);
+            
+            if (lastWord.length < 2) {
+                hideAutocomplete();
+                return;
+            }
+            
+            autocompleteTimeout = setTimeout(() => {
+                const suggestions = searchFoods(lastWord);
+                showAutocomplete(suggestions);
+            }, 300); // Debounce de 300ms
+        }
+
+        function handleAutocompleteKeydown(e) {
+            const dropdown = document.getElementById('autocomplete-dropdown');
+            
+            if (dropdown.classList.contains('hidden')) return;
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, currentSuggestions.length - 1);
+                showAutocomplete(currentSuggestions);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+                showAutocomplete(currentSuggestions);
+            } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
+                e.preventDefault();
+                selectSuggestion(selectedSuggestionIndex);
+            } else if (e.key === 'Escape') {
+                hideAutocomplete();
+            }
+        }
+
         // --- EVENT LISTENERS ---
         console.log('📌 Registrando event listeners...');
         
@@ -2353,8 +3512,27 @@
         document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
         document.getElementById('save-weight-btn').addEventListener('click', saveWeight);
         document.getElementById('toggle-weight-chart-btn').addEventListener('click', toggleWeightChart);
+        document.getElementById('toggle-macros-chart-btn').addEventListener('click', toggleMacrosChart);
+        document.getElementById('add-favorite-btn').addEventListener('click', saveFavoriteMeal);
+        document.getElementById('open-gallery-btn').addEventListener('click', openGallery);
+        document.getElementById('close-gallery-btn').addEventListener('click', closeGallery);
         document.getElementById('meal-photo-input').addEventListener('change', handlePhotoSelect);
         document.getElementById('remove-photo-btn').addEventListener('click', removePhoto);
+        document.getElementById('share-day-btn').addEventListener('click', openShareModal);
+        document.getElementById('close-share-modal').addEventListener('click', closeShareModal);
+        document.getElementById('share-whatsapp').addEventListener('click', shareToWhatsApp);
+        document.getElementById('share-copy').addEventListener('click', copyShareText);
+        document.getElementById('enable-notifications').addEventListener('click', enableNotifications);
+        document.getElementById('dismiss-notifications').addEventListener('click', dismissNotificationBanner);
+        
+        // Autocomplete listeners
+        const mealInput = document.getElementById('meal-input');
+        mealInput.addEventListener('input', handleAutocompleteInput);
+        mealInput.addEventListener('keydown', handleAutocompleteKeydown);
+        mealInput.addEventListener('blur', () => {
+            // Delay para permitir clique nas sugestões
+            setTimeout(hideAutocomplete, 200);
+        });
         
         const btnLogin = document.getElementById('btn-login');
         const btnLogout = document.getElementById('btn-logout');
@@ -2381,6 +3559,7 @@
         document.getElementById('view-history-btn').addEventListener('click', () => {
             document.getElementById('history-section').classList.remove('hidden');
             renderWeeklyChart();
+            loadCompareDayOptions();
         });
         document.getElementById('close-history-btn').addEventListener('click', () => {
             document.getElementById('history-section').classList.add('hidden');
@@ -2395,14 +3574,31 @@
         document.getElementById('save-notifications-btn').addEventListener('click', saveNotificationSettings);
         document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
         document.getElementById('export-json-btn').addEventListener('click', exportToJSON);
+        document.getElementById('export-image-btn').addEventListener('click', exportAsImage);
+        document.getElementById('export-pdf-btn').addEventListener('click', exportAsPDF);
+        document.getElementById('toggle-compare-btn').addEventListener('click', toggleComparison);
+        document.getElementById('compare-day-select').addEventListener('change', () => {
+            if (comparisonDay) {
+                comparisonDay = null;
+                document.getElementById('toggle-compare-btn').innerHTML = '<i class="fa-solid fa-chart-line mr-1"></i> Comparar';
+            }
+        });
         
         // Initialize
-        console.log('🚀 === INICIALIZANDO APP v2.1 ===');
+        console.log('🚀 === INICIALIZANDO APP v3.2.0 ===');
         loadTheme();
         updateDateDisplay();
         loadNotificationSettings();
         startNotificationScheduler();
         loadWeightHistory();
+        loadFavoriteMeals();
+        loadAchievements();
+        renderAchievements();
+        showNotificationBanner();
+        
+        // Check notifications every minute
+        setInterval(checkMealReminders, 60000);
+        
         initAuth();
         
         // Register Service Worker (PWA)
