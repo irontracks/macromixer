@@ -1,5 +1,45 @@
 # MacroMixer - Changelog
 
+## v3.3.2 (2024-12-06 04:15) - BUGFIX CRÍTICO: Dashboard e Ovos 🐛🥚
+
+### 🐛 Correções Críticas
+1. **Dashboard "O que já foi consumido" agora atualiza corretamente**
+   - **Problema**: Após adicionar refeição, o dashboard não mostrava os valores
+   - **Causa**: `mealEntry` usava campos `totals.kcal`, mas `recalculateTotals` esperava `item.cals`
+   - **Solução**: Adicionados campos duplicados (`cals`, `prot`, `carb`, `fat`) para compatibilidade
+   - **Resultado**: Dashboard atualiza instantaneamente após adicionar refeição ✅
+
+2. **Ovos (plural) agora são reconhecidos**
+   - **Problema**: "3 ovos" não era encontrado no banco de dados
+   - **Causa**: Banco tinha apenas "ovo" (singular)
+   - **Solução**: Adicionado "ovos" como entrada no foodDatabase
+   - **Resultado**: Tanto "ovo" quanto "ovos" funcionam perfeitamente ✅
+
+### 📊 Estrutura de Dados Corrigida
+```javascript
+// ANTES (não funcionava com recalculateTotals)
+mealEntry = {
+  totals: { kcal: 318, p: 25, c: 28, f: 10 }
+}
+
+// DEPOIS (funciona perfeitamente)
+mealEntry = {
+  totals: { kcal: 318, p: 25, c: 28, f: 10 },
+  cals: 318,  // ← NOVO
+  prot: 25,   // ← NOVO
+  carb: 28,   // ← NOVO
+  fat: 10     // ← NOVO
+}
+```
+
+### 🎯 Impacto
+- ✅ Dashboard funciona 100%
+- ✅ Barras de progresso atualizam corretamente
+- ✅ "Buffer" de calorias calcula corretamente
+- ✅ Ovos reconhecidos em qualquer forma
+
+---
+
 ## v3.3.1 (2024-12-06 04:00) - UX MELHORADA: Histórico, Dashboard e PWA 🎨🔧
 
 ### 🎨 Melhorias de UX/UI

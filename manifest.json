@@ -2,7 +2,7 @@
   "name": "MacroMixer - Dr. Carlos Edition",
   "short_name": "MacroMixer",
   "description": "Rastreador de calorias e macros profissional",
-  "start_url": "./macromixer.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#06b6d4",
@@ -28,7 +28,7 @@
       "name": "Adicionar Refeição",
       "short_name": "Nova Refeição",
       "description": "Registrar nova refeição",
-      "url": "./macromixer.html#add-meal",
+      "url": "./index.html#add-meal",
       "icons": [
         {
           "src": "./icon-192.svg",

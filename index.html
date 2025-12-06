@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 MacroMixer v3.3.1 - Dr. Carlos Edition</title>
+    <title>💪 MacroMixer v3.3.2 - Dr. Carlos Edition</title>
     <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
     <meta name="theme-color" content="#06b6d4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -710,6 +710,7 @@
     
     // Ovos - Completo
     "ovo": { c: 0.4, p: 6.3, f: 5.0, kcal: 72, unit: "Ovo Inteiro (1 Grande) - 50g", approx: { unidade: 50 } },
+    "ovos": { c: 0.4, p: 6.3, f: 5.0, kcal: 72, unit: "Ovo Inteiro (1 Grande) - 50g", approx: { unidade: 50 } },
     "1 ovo": { c: 0.4, p: 6.3, f: 5.0, kcal: 72, unit: "Ovo Inteiro (1 Grande) - 50g", approx: { unidade: 50 } },
     "ovo grande": { c: 0.4, p: 6.3, f: 5.0, kcal: 72, unit: "Ovo Inteiro (1 Grande) - 50g", approx: { unidade: 50 } },
     "ovo cozido": { c: 0.6, p: 6.3, f: 5.0, kcal: 72, unit: "Ovo Cozido (1 Unidade) - 50g", approx: { unidade: 50 } },
@@ -1043,7 +1044,7 @@
         });
 
         function initAuth() {
-            console.log('=== MacroMixer v3.3.1 - Dr. Carlos Edition ===');
+            console.log('=== MacroMixer v3.3.2 - Dr. Carlos Edition ===');
             console.log('Firebase Auth:', auth);
             console.log('Verificando elementos...');
             console.log('btn-login existe?', document.getElementById('btn-login'));
@@ -1297,6 +1298,11 @@
                     f: safeNumber(tempMealAnalysis.totals.f),
                     kcal: safeNumber(tempMealAnalysis.totals.kcal)
                 },
+                // Campos para compatibilidade com recalculateTotals
+                cals: safeNumber(tempMealAnalysis.totals.kcal),
+                prot: safeNumber(tempMealAnalysis.totals.p),
+                carb: safeNumber(tempMealAnalysis.totals.c),
+                fat: safeNumber(tempMealAnalysis.totals.f),
                 isApproximate: Boolean(tempMealAnalysis.isApproximate),
                 photo: String(currentMealPhoto || "")
             };
