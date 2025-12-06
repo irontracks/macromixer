@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 MacroMixer v3.4.0 - Dr. Carlos Edition</title>
+    <title>💪 MacroMixer v3.4.1 - Dr. Carlos Edition</title>
     <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
     <meta name="theme-color" content="#06b6d4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -80,7 +80,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.4.0</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.4.1</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -997,70 +997,10 @@
         renderLogs();
         updateWaterDisplay();
         
-        // Firebase é OPCIONAL - apenas sincroniza se usuário fizer login
-        onAuthStateChanged(auth, (user) => {
-            console.log('🔄 onAuthStateChanged disparado (modo opcional)');
-            console.log('User:', user);
-            
-            if (user) {
-                console.log('✅ Usuário logado (Firebase ativo):', user.displayName || user.email);
-                console.log('UID:', user.uid);
-                currentUser = user;
-                useLocalStorage = false; // Usa Firebase como backup
-                isLoggingIn = false;
-                
-                // Atualiza UI
-                const btnLogin = document.getElementById('btn-login');
-                const userStatus = document.getElementById('user-status');
-                const usernameDisplay = document.getElementById('username-display');
-                
-                if (btnLogin) btnLogin.classList.add('hidden');
-                if (userStatus) {
-                    userStatus.classList.remove('hidden');
-                    userStatus.classList.add('flex');
-                }
-                if (usernameDisplay) {
-                    usernameDisplay.innerText = user.displayName || user.email || 'Usuário';
-                }
-                
-                console.log('🔄 Sincronizando com Firebase (opcional)...');
-                
-                // Sincroniza com Firebase (mas não bloqueia se falhar)
-                try {
-                    loadUserSettings();
-                    loadDailyLog();
-                    loadNotificationSettings();
-                    loadAchievements();
-                    renderAchievements();
-                } catch (error) {
-                    console.warn('⚠️ Erro ao sincronizar com Firebase (continuando offline):', error);
-                }
-            } else {
-                console.log('ℹ️ Modo offline (sem Firebase)');
-                currentUser = null;
-                useLocalStorage = true;
-                isLoggingIn = false;
-                
-                // Atualiza UI
-                const btnLogin = document.getElementById('btn-login');
-                const userStatus = document.getElementById('user-status');
-                
-                if (btnLogin) {
-                    btnLogin.classList.remove('hidden');
-                    btnLogin.classList.add('flex');
-                }
-                if (userStatus) {
-                    userStatus.classList.add('hidden');
-                    userStatus.classList.remove('flex');
-                }
-                
-                // Dados já foram carregados do localStorage no início
-                console.log('✅ App funcionando 100% offline');
-            }
-        });
+        // onAuthStateChanged será configurado DEPOIS dos event listeners (no final do código)
 
         function initAuth() {
-            console.log('=== MacroMixer v3.4.0 - OFFLINE FIRST Edition ===');
+            console.log('=== MacroMixer v3.4.1 - OFFLINE FIRST Edition ===');
             console.log('Firebase Auth:', auth);
             console.log('Verificando elementos...');
             console.log('btn-login existe?', document.getElementById('btn-login'));
@@ -3742,6 +3682,68 @@
         }
         
         console.log('✅ Event listeners registrados!');
+        
+        // AGORA configura onAuthStateChanged (DEPOIS dos event listeners)
+        onAuthStateChanged(auth, (user) => {
+            console.log('🔄 onAuthStateChanged disparado (modo opcional)');
+            console.log('User:', user);
+            
+            if (user) {
+                console.log('✅ Usuário logado (Firebase ativo):', user.displayName || user.email);
+                console.log('UID:', user.uid);
+                currentUser = user;
+                useLocalStorage = false;
+                isLoggingIn = false;
+                
+                // Atualiza UI
+                const btnLogin = document.getElementById('btn-login');
+                const userStatus = document.getElementById('user-status');
+                const usernameDisplay = document.getElementById('username-display');
+                
+                if (btnLogin) btnLogin.classList.add('hidden');
+                if (userStatus) {
+                    userStatus.classList.remove('hidden');
+                    userStatus.classList.add('flex');
+                }
+                if (usernameDisplay) {
+                    usernameDisplay.innerText = user.displayName || user.email || 'Usuário';
+                }
+                
+                console.log('🔄 Sincronizando com Firebase (opcional)...');
+                
+                // Sincroniza com Firebase (mas não bloqueia se falhar)
+                try {
+                    loadUserSettings();
+                    loadDailyLog();
+                    loadNotificationSettings();
+                    loadAchievements();
+                    renderAchievements();
+                } catch (error) {
+                    console.warn('⚠️ Erro ao sincronizar com Firebase (continuando offline):', error);
+                }
+            } else {
+                console.log('ℹ️ Modo offline (sem Firebase)');
+                currentUser = null;
+                useLocalStorage = true;
+                isLoggingIn = false;
+                
+                // Atualiza UI
+                const btnLogin = document.getElementById('btn-login');
+                const userStatus = document.getElementById('user-status');
+                
+                if (btnLogin) {
+                    btnLogin.classList.remove('hidden');
+                    btnLogin.classList.add('flex');
+                }
+                if (userStatus) {
+                    userStatus.classList.add('hidden');
+                    userStatus.classList.remove('flex');
+                }
+                
+                // Dados já foram carregados do localStorage no início
+                console.log('✅ App funcionando 100% offline');
+            }
+        });
         
         // New event listeners
         document.getElementById('prev-day-btn').addEventListener('click', () => changeViewDate(-1));
