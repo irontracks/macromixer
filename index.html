@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 MacroMixer v3.3.8 - Dr. Carlos Edition</title>
+    <title>💪 MacroMixer v3.3.9 - Dr. Carlos Edition</title>
     <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
     <meta name="theme-color" content="#06b6d4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -80,7 +80,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.3.8</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.3.9</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -904,6 +904,10 @@
         let currentMealPhoto = null; // Foto temporária da refeição
         let favoriteMeals = []; // Refeições favoritas
         let macrosChart = null; // Gráfico de distribuição de macros
+        
+        // Firebase listeners (para cancelar quando necessário)
+        let unsubscribeSettings = null;
+        let unsubscribeLogs = null;
 
         // --- AUTH COM GOOGLE ---
         // Detecta se está em modo standalone (PWA instalado)
@@ -1080,7 +1084,7 @@
         });
 
         function initAuth() {
-            console.log('=== MacroMixer v3.3.8 - Dr. Carlos Edition ===');
+            console.log('=== MacroMixer v3.3.9 - Dr. Carlos Edition ===');
             console.log('Firebase Auth:', auth);
             console.log('Verificando elementos...');
             console.log('btn-login existe?', document.getElementById('btn-login'));
