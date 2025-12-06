@@ -1,5 +1,5 @@
 // Service Worker para MacroMixer PWA
-const CACHE_NAME = 'macromixer-v3.3.6';
+const CACHE_NAME = 'macromixer-v3.3.8';
 const urlsToCache = [
   './index.html',
   'https://cdn.tailwindcss.com',

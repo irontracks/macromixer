@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 MacroMixer v3.3.7 - Dr. Carlos Edition</title>
+    <title>💪 MacroMixer v3.3.8 - Dr. Carlos Edition</title>
     <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
     <meta name="theme-color" content="#06b6d4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -11,7 +11,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MacroMixer">
     <link rel="manifest" href="./manifest.json">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3480/3480822.png">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -78,7 +80,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.3.7</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.3.8</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -909,7 +911,22 @@
                             window.navigator.standalone || 
                             document.referrer.includes('android-app://');
         
+        let isLoggingIn = false; // Flag para evitar múltiplos cliques
+        
         const handleLogin = async () => {
+            // Previne múltiplos cliques
+            if (isLoggingIn) {
+                console.log('⚠️ Login já em andamento, aguarde...');
+                return;
+            }
+            
+            // Se já estiver logado, não faz nada
+            if (currentUser) {
+                console.log('✅ Usuário já está logado:', currentUser.displayName);
+                return;
+            }
+            
+            isLoggingIn = true;
             console.log('🔵 Botão Entrar clicado!');
             console.log('Auth object:', auth);
             console.log('Google Provider:', googleProvider);
@@ -919,13 +936,17 @@
                 // Se estiver em PWA/standalone, usa redirect em vez de popup
                 if (isStandalone) {
                     console.log('Usando signInWithRedirect (PWA mode)...');
+                    // Marca que está fazendo redirect
+                    sessionStorage.setItem('loginInProgress', 'true');
                     await signInWithRedirect(auth, googleProvider);
                 } else {
                     console.log('Usando signInWithPopup (browser mode)...');
                     const result = await signInWithPopup(auth, googleProvider);
                     console.log('✅ Login bem-sucedido!', result.user);
+                    isLoggingIn = false;
                 }
             } catch (error) {
+                isLoggingIn = false;
                 console.error('❌ Erro no login:', error);
                 console.error('Error code:', error.code);
                 console.error('Error message:', error.message);
@@ -951,22 +972,33 @@
         };
 
         // Verifica se há resultado de redirect (para PWA) - APENAS UMA VEZ POR SESSÃO
-        const redirectChecked = sessionStorage.getItem('redirectChecked');
+        // IMPORTANTE: Usa flag no localStorage com timestamp para evitar loops
+        const lastRedirectCheck = localStorage.getItem('lastRedirectCheck');
+        const now = Date.now();
+        const FIVE_MINUTES = 5 * 60 * 1000;
         
-        if (!redirectChecked) {
-            sessionStorage.setItem('redirectChecked', 'true');
-            console.log('🔍 Verificando resultado de redirect (primeira vez nesta sessão)...');
+        // Só verifica redirect se:
+        // 1. Nunca verificou antes OU
+        // 2. Última verificação foi há mais de 5 minutos
+        if (!lastRedirectCheck || (now - parseInt(lastRedirectCheck)) > FIVE_MINUTES) {
+            localStorage.setItem('lastRedirectCheck', now.toString());
+            console.log('🔍 Verificando resultado de redirect...');
             
             getRedirectResult(auth)
                 .then((result) => {
                     if (result) {
                         console.log('✅ Login via redirect bem-sucedido!', result.user);
+                        // Limpa a flag após sucesso
+                        localStorage.removeItem('lastRedirectCheck');
                     } else {
                         console.log('ℹ️ Nenhum redirect pendente');
                     }
                 })
                 .catch((error) => {
                     console.error('❌ Erro no redirect:', error);
+                    
+                    // Limpa a flag em caso de erro para permitir nova tentativa
+                    localStorage.removeItem('lastRedirectCheck');
                     
                     if (error.code !== 'auth/popup-closed-by-user' && 
                         error.code !== 'auth/network-request-failed' &&
@@ -975,7 +1007,7 @@
                     }
                 });
         } else {
-            console.log('⏭️ Redirect já verificado nesta sessão');
+            console.log('⏭️ Redirect verificado recentemente (aguardando 5min)');
         }
 
         onAuthStateChanged(auth, (user) => {
@@ -987,6 +1019,11 @@
                 console.log('UID:', user.uid);
                 currentUser = user;
                 useLocalStorage = false;
+                isLoggingIn = false; // Limpa flag de login
+                
+                // Limpa flags de login em progresso
+                sessionStorage.removeItem('loginInProgress');
+                localStorage.removeItem('lastRedirectCheck');
                 
                 // Atualiza UI
                 const btnLogin = document.getElementById('btn-login');
@@ -1015,6 +1052,7 @@
                 console.log('❌ Usuário não logado');
                 currentUser = null;
                 useLocalStorage = true; // Ativa modo offline
+                isLoggingIn = false; // Limpa flag de login
                 
                 // Atualiza UI
                 const btnLogin = document.getElementById('btn-login');
@@ -1042,7 +1080,7 @@
         });
 
         function initAuth() {
-            console.log('=== MacroMixer v3.3.7 - Dr. Carlos Edition ===');
+            console.log('=== MacroMixer v3.3.8 - Dr. Carlos Edition ===');
             console.log('Firebase Auth:', auth);
             console.log('Verificando elementos...');
             console.log('btn-login existe?', document.getElementById('btn-login'));
@@ -1191,19 +1229,45 @@
 
         // Funções com Firebase
         async function loadUserSettings() {
-            if (!currentUser) return;
-            const docRef = doc(db, 'users', currentUser.uid, 'settings', 'goals');
+            if (!currentUser) {
+                console.log('⚠️ loadUserSettings: currentUser não definido, usando localStorage');
+                loadUserSettingsLocal();
+                return;
+            }
             
-            onSnapshot(docRef, (docSnap) => {
+            const docRef = doc(db, 'users', currentUser.uid, 'settings', 'goals');
+            console.log('📥 loadUserSettings: Carregando do Firebase');
+            
+            // Cancela listener anterior se existir
+            if (unsubscribeSettings) {
+                console.log('🔄 Cancelando listener anterior de settings');
+                unsubscribeSettings();
+            }
+            
+            unsubscribeSettings = onSnapshot(docRef, (docSnap) => {
+                console.log('🔔 onSnapshot (settings) disparado');
+                
                 if (docSnap.exists()) {
+                    console.log('✅ Settings existem no Firebase');
                     const data = docSnap.data();
+                    console.log('   Dados recebidos:', data);
+                    
                     userSettings = { ...userSettings, ...data };
+                    
+                    // Salva no localStorage como backup
+                    saveToLocalStorage('settings', userSettings);
+                    
                     updateUIInputs();
                     updateDashboard();
                     document.getElementById('goals-section').classList.add('hidden');
                 } else {
+                    console.log('ℹ️ Settings não existem, mostrando formulário');
                     document.getElementById('goals-section').classList.remove('hidden');
                 }
+            }, (error) => {
+                console.error('❌ Erro no onSnapshot (settings):', error);
+                // Fallback para localStorage
+                loadUserSettingsLocal();
             });
         }
 
@@ -1251,13 +1315,32 @@
 
         // Funções com Firebase
         async function loadDailyLog() {
-            if (!currentUser) return;
+            if (!currentUser) {
+                console.log('⚠️ loadDailyLog: currentUser não definido, usando localStorage');
+                loadDailyLogLocal();
+                return;
+            }
+            
             const todayStr = new Date().toISOString().split('T')[0];
             const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
+            
+            console.log('📥 loadDailyLog: Carregando do Firebase para', todayStr);
 
-            onSnapshot(docRef, (docSnap) => {
+            // Cancela listener anterior se existir
+            if (unsubscribeLogs) {
+                console.log('🔄 Cancelando listener anterior de logs');
+                unsubscribeLogs();
+            }
+
+            unsubscribeLogs = onSnapshot(docRef, (docSnap) => {
+                console.log('🔔 onSnapshot (logs) disparado');
+                
                 if (docSnap.exists()) {
-                    dailyLog = docSnap.data();
+                    console.log('✅ Documento existe no Firebase');
+                    const data = docSnap.data();
+                    console.log('   Dados recebidos:', data);
+                    
+                    dailyLog = data;
                     if (!dailyLog.total) dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
                     if (!dailyLog.water) dailyLog.water = 0;
                     if (!dailyLog.items) dailyLog.items = [];
@@ -1276,15 +1359,27 @@
                         return item;
                     });
                     
+                    console.log('   Items após migração:', dailyLog.items.length);
+                    
                     // Recalcula totais para garantir consistência
                     recalculateTotals();
+                    
+                    // Salva no localStorage como backup
+                    saveToLocalStorage(`log_${todayStr}`, dailyLog);
                 } else {
+                    console.log('ℹ️ Documento não existe, criando novo');
                     dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
                 }
+                
+                console.log('📊 dailyLog.total após load:', dailyLog.total);
                 renderLogs();
                 updateDashboard();
                 updateWaterDisplay();
                 analyzeContext();
+            }, (error) => {
+                console.error('❌ Erro no onSnapshot (logs):', error);
+                // Fallback para localStorage
+                loadDailyLogLocal();
             });
         }
 
