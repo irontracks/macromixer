@@ -110,16 +110,27 @@
 
             <!-- Dr Carlos Presets -->
             <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="applyPreset('A')" class="preset-btn bg-gradient-to-br from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 border border-red-500/30 rounded-lg p-3 text-left group">
-                    <div class="text-xs text-red-300 uppercase font-bold tracking-widest mb-1">Pré-Set A</div>
-                    <div class="text-white font-bold text-sm"><i class="fa-solid fa-fire mr-1"></i> MASSACRE</div>
-                    <div class="text-[10px] text-red-200 mt-1">Perna/Costas (High Carb)</div>
-                </button>
-                <button onclick="applyPreset('B')" class="preset-btn bg-gradient-to-br from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 border border-blue-500/30 rounded-lg p-3 text-left group">
-                    <div class="text-xs text-blue-300 uppercase font-bold tracking-widest mb-1">Pré-Set B</div>
-                    <div class="text-white font-bold text-sm"><i class="fa-solid fa-snowflake mr-1"></i> VÁCUO</div>
-                    <div class="text-[10px] text-blue-200 mt-1">Ombro/Braço (Low Carb)</div>
-                </button>
+                <div class="relative group">
+                    <button onclick="applyPreset('A')" class="preset-btn w-full bg-gradient-to-br from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 border border-red-500/30 rounded-lg p-3 text-left">
+                        <div class="text-xs text-red-300 uppercase font-bold tracking-widest mb-1">Pré-Set A</div>
+                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-fire mr-1"></i> MASSACRE</div>
+                        <div class="text-[10px] text-red-200 mt-1">Perna/Costas (High Carb)</div>
+                    </button>
+                    <button onclick="savePreset('A', event)" class="absolute top-2 right-2 text-red-300 hover:text-white bg-red-900/50 hover:bg-red-900 rounded p-1.5 transition-all opacity-70 hover:opacity-100" title="Salvar valores atuais neste preset">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                    </button>
+                </div>
+                
+                <div class="relative group">
+                    <button onclick="applyPreset('B')" class="preset-btn w-full bg-gradient-to-br from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 border border-blue-500/30 rounded-lg p-3 text-left">
+                        <div class="text-xs text-blue-300 uppercase font-bold tracking-widest mb-1">Pré-Set B</div>
+                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-snowflake mr-1"></i> VÁCUO</div>
+                        <div class="text-[10px] text-blue-200 mt-1">Ombro/Braço (Low Carb)</div>
+                    </button>
+                    <button onclick="savePreset('B', event)" class="absolute top-2 right-2 text-blue-300 hover:text-white bg-blue-900/50 hover:bg-blue-900 rounded p-1.5 transition-all opacity-70 hover:opacity-100" title="Salvar valores atuais neste preset">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                    </button>
+                </div>
             </div>
 
             <form id="goals-form" class="space-y-4">
@@ -1000,18 +1011,58 @@
 
         // --- PRESETS DR CARLOS ---
         window.applyPreset = (type) => {
-            const presets = {
-                'A': { cals: 2100, prot: 240, carb: 180, fat: 45 }, // Massacre
-                'B': { cals: 1750, prot: 260, carb: 60, fat: 55 }  // Vacuo
-            };
+            // Tenta carregar do localStorage, senão usa padrão
+            let presets = loadFromLocalStorage('presets');
+            
+            if (!presets) {
+                presets = {
+                    'A': { cals: 2100, prot: 240, carb: 180, fat: 45 }, // Massacre (Padrão)
+                    'B': { cals: 1750, prot: 260, carb: 60, fat: 55 }  // Vacuo (Padrão)
+                };
+            }
             
             const p = presets[type];
-            document.getElementById('goal-cals').value = p.cals;
-            document.getElementById('goal-prot').value = p.prot;
-            document.getElementById('goal-carb').value = p.carb;
-            document.getElementById('goal-fat').value = p.fat;
+            if (p) {
+                document.getElementById('goal-cals').value = p.cals;
+                document.getElementById('goal-prot').value = p.prot;
+                document.getElementById('goal-carb').value = p.carb;
+                document.getElementById('goal-fat').value = p.fat;
+                
+                // Feedback visual
+                const btn = event?.currentTarget;
+                if(btn) {
+                    btn.classList.add('ring-2', 'ring-white');
+                    setTimeout(() => btn.classList.remove('ring-2', 'ring-white'), 300);
+                }
+            }
+        };
+        
+        window.savePreset = (type, e) => {
+            e.stopPropagation(); // Evita acionar o applyPreset
             
-            alert(`Preset ${type === 'A' ? 'MASSACRE' : 'VÁCUO'} carregado. Clique em salvar.`);
+            if (!confirm(`Deseja salvar os valores ATUAIS do formulário como Pré-Set ${type} (${type === 'A' ? 'MASSACRE' : 'VÁCUO'})?`)) {
+                return;
+            }
+            
+            const cals = Number(document.getElementById('goal-cals').value);
+            const prot = Number(document.getElementById('goal-prot').value);
+            const carb = Number(document.getElementById('goal-carb').value);
+            const fat = Number(document.getElementById('goal-fat').value);
+            
+            if (!cals || !prot || !carb || !fat) {
+                alert('⚠️ Preencha todos os campos de macros e calorias antes de salvar o preset.');
+                return;
+            }
+            
+            let presets = loadFromLocalStorage('presets') || {
+                'A': { cals: 2100, prot: 240, carb: 180, fat: 45 },
+                'B': { cals: 1750, prot: 260, carb: 60, fat: 55 }
+            };
+            
+            presets[type] = { cals, prot, carb, fat };
+            saveToLocalStorage('presets', presets);
+            
+            alert(`✅ Pré-Set ${type} atualizado com sucesso!`);
         };
 
         // --- LOCAL STORAGE FUNCTIONS ---
