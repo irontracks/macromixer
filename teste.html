@@ -80,7 +80,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.4.2</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.4.3</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -109,26 +109,40 @@
             </div>
 
             <!-- Dr Carlos Presets -->
-            <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <!-- Preset A: MASSACRE -->
                 <div class="relative group">
-                    <button onclick="applyPreset('A')" class="preset-btn w-full bg-gradient-to-br from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 border border-red-500/30 rounded-lg p-3 text-left">
-                        <div class="text-xs text-red-300 uppercase font-bold tracking-widest mb-1">Pré-Set A</div>
-                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-fire mr-1"></i> MASSACRE</div>
-                        <div class="text-[10px] text-red-200 mt-1">Perna/Costas (High Carb)</div>
+                    <button onclick="applyPreset('A')" class="preset-btn w-full h-full bg-gradient-to-br from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 border border-red-500/30 rounded-lg p-2 text-left transition-all shadow-lg hover:shadow-red-900/50">
+                        <div class="text-[10px] text-red-300 uppercase font-bold tracking-widest mb-1">Pré-Set A</div>
+                        <div class="text-white font-bold text-xs sm:text-sm"><i class="fa-solid fa-fire mr-1"></i> MASSACRE</div>
+                        <div class="text-[9px] text-red-200 mt-1 leading-tight">High Carb/Treino</div>
                     </button>
-                    <button onclick="savePreset('A', event)" class="absolute top-2 right-2 text-red-300 hover:text-white bg-red-900/50 hover:bg-red-900 rounded p-1.5 transition-all opacity-70 hover:opacity-100" title="Salvar valores atuais neste preset">
-                        <i class="fa-solid fa-floppy-disk"></i>
+                    <button onclick="savePreset('A', event)" class="absolute top-1 right-1 text-red-300 hover:text-white bg-red-900/50 hover:bg-red-900 rounded p-1 transition-all opacity-70 hover:opacity-100" title="Salvar neste preset">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
                     </button>
                 </div>
-                
+
+                <!-- Preset C: PESSOAL (Novo) -->
                 <div class="relative group">
-                    <button onclick="applyPreset('B')" class="preset-btn w-full bg-gradient-to-br from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 border border-blue-500/30 rounded-lg p-3 text-left">
-                        <div class="text-xs text-blue-300 uppercase font-bold tracking-widest mb-1">Pré-Set B</div>
-                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-snowflake mr-1"></i> VÁCUO</div>
-                        <div class="text-[10px] text-blue-200 mt-1">Ombro/Braço (Low Carb)</div>
+                    <button onclick="applyPreset('C')" class="preset-btn w-full h-full bg-gradient-to-br from-emerald-800 to-emerald-600 hover:from-emerald-700 hover:to-emerald-500 border border-emerald-500/30 rounded-lg p-2 text-left transition-all shadow-lg hover:shadow-emerald-900/50">
+                        <div class="text-[10px] text-emerald-300 uppercase font-bold tracking-widest mb-1">Pré-Set C</div>
+                        <div class="text-white font-bold text-xs sm:text-sm"><i class="fa-solid fa-user mr-1"></i> PESSOAL</div>
+                        <div class="text-[9px] text-emerald-100 mt-1 leading-tight">Minha Rotina</div>
                     </button>
-                    <button onclick="savePreset('B', event)" class="absolute top-2 right-2 text-blue-300 hover:text-white bg-blue-900/50 hover:bg-blue-900 rounded p-1.5 transition-all opacity-70 hover:opacity-100" title="Salvar valores atuais neste preset">
-                        <i class="fa-solid fa-floppy-disk"></i>
+                    <button onclick="savePreset('C', event)" class="absolute top-1 right-1 text-emerald-300 hover:text-white bg-emerald-900/50 hover:bg-emerald-900 rounded p-1 transition-all opacity-70 hover:opacity-100" title="Salvar neste preset">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Preset B: VÁCUO -->
+                <div class="relative group">
+                    <button onclick="applyPreset('B')" class="preset-btn w-full h-full bg-gradient-to-br from-slate-800 to-slate-600 hover:from-slate-700 hover:to-slate-500 border border-slate-500/30 rounded-lg p-2 text-left transition-all shadow-lg hover:shadow-slate-900/50">
+                        <div class="text-[10px] text-slate-300 uppercase font-bold tracking-widest mb-1">Pré-Set B</div>
+                        <div class="text-white font-bold text-xs sm:text-sm"><i class="fa-solid fa-wind mr-1"></i> VÁCUO</div>
+                        <div class="text-[9px] text-slate-200 mt-1 leading-tight">Low Carb/Descanso</div>
+                    </button>
+                    <button onclick="savePreset('B', event)" class="absolute top-1 right-1 text-slate-300 hover:text-white bg-slate-900/50 hover:bg-slate-900 rounded p-1 transition-all opacity-70 hover:opacity-100" title="Salvar neste preset">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
                     </button>
                 </div>
             </div>
@@ -1017,10 +1031,16 @@
             if (!presets) {
                 presets = {
                     'A': { cals: 2100, prot: 240, carb: 180, fat: 45 }, // Massacre (Padrão)
-                    'B': { cals: 1750, prot: 260, carb: 60, fat: 55 }  // Vacuo (Padrão)
+                    'B': { cals: 1750, prot: 260, carb: 60, fat: 55 }, // Vacuo (Padrão)
+                    'C': { cals: 2000, prot: 160, carb: 200, fat: 60 } // Pessoal (Padrão)
                 };
             }
             
+            // Garante compatibilidade
+            if (!presets['C']) {
+                presets['C'] = { cals: 2000, prot: 160, carb: 200, fat: 60 };
+            }
+
             const p = presets[type];
             if (p) {
                 document.getElementById('goal-cals').value = p.cals;
@@ -1034,13 +1054,20 @@
                     btn.classList.add('ring-2', 'ring-white');
                     setTimeout(() => btn.classList.remove('ring-2', 'ring-white'), 300);
                 }
+                
+                // Feedback toast
+                const names = {'A': 'MASSACRE', 'B': 'VÁCUO', 'C': 'PESSOAL'};
+                // Opcional: mostrar algum aviso
             }
         };
         
         window.savePreset = (type, e) => {
             e.stopPropagation(); // Evita acionar o applyPreset
             
-            if (!confirm(`Deseja salvar os valores ATUAIS do formulário como Pré-Set ${type} (${type === 'A' ? 'MASSACRE' : 'VÁCUO'})?`)) {
+            const names = {'A': 'MASSACRE', 'B': 'VÁCUO', 'C': 'PESSOAL'};
+            const name = names[type] || type;
+
+            if (!confirm(`Deseja salvar os valores ATUAIS do formulário como Pré-Set ${type} (${name})?`)) {
                 return;
             }
             
@@ -1056,13 +1083,14 @@
             
             let presets = loadFromLocalStorage('presets') || {
                 'A': { cals: 2100, prot: 240, carb: 180, fat: 45 },
-                'B': { cals: 1750, prot: 260, carb: 60, fat: 55 }
+                'B': { cals: 1750, prot: 260, carb: 60, fat: 55 },
+                'C': { cals: 2000, prot: 160, carb: 200, fat: 60 }
             };
             
             presets[type] = { cals, prot, carb, fat };
             saveToLocalStorage('presets', presets);
             
-            alert(`✅ Pré-Set ${type} atualizado com sucesso!`);
+            alert(`✅ Pré-Set ${type} (${name}) atualizado com sucesso!`);
         };
 
         // --- LOCAL STORAGE FUNCTIONS ---
