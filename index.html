@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💪 MacroMixer v3.4.2 - Dr. Carlos Edition</title>
+    <title>💪 MacroMixer v3.4.3 - Dr. Carlos Edition</title>
     <meta name="description" content="Rastreador profissional de calorias e macros - Dr. Carlos Edition">
     <meta name="theme-color" content="#06b6d4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -51,26 +51,93 @@
 
         /* LIGHT MODE */
         body.light-mode {
-            background-color: #f1f5f9; /* Slate 100 */
-            color: #1e293b; /* Slate 800 */
+            background-color: #f8fafc; /* Slate 50 - Lighter background */
+            color: #334155; /* Slate 700 */
         }
         body.light-mode .glass-panel {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(203, 213, 225, 0.6);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-        body.light-mode ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+        
+        /* Light Mode Overrides for Specific Elements */
+        body.light-mode .text-white { color: #1e293b !important; } /* Inverte texto branco para escuro */
+        body.light-mode .text-gray-400 { color: #64748b !important; } /* Escurece cinza claro */
+        body.light-mode .text-slate-400 { color: #64748b !important; }
+        body.light-mode .text-slate-500 { color: #475569 !important; }
+        
+        /* Inputs & Textareas */
+        body.light-mode input, 
+        body.light-mode textarea,
+        body.light-mode select {
+            background-color: #f1f5f9 !important; /* Slate 100 */
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
         }
-        body.light-mode ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+        body.light-mode input:focus, 
+        body.light-mode textarea:focus {
+            background-color: #ffffff !important;
+            border-color: #06b6d4 !important; /* Cyan 500 */
         }
-        body.light-mode ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+
+        /* Macro Cards Backgrounds */
+        body.light-mode .bg-slate-800\/50,
+        body.light-mode .bg-slate-800\/30 {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
         }
+
+        /* Progress Bar Tracks */
+        body.light-mode .bg-slate-900 {
+            background-color: #e2e8f0 !important; /* Slate 200 instead of 900 */
+        }
+        
+        /* Scrollbar */
+        body.light-mode ::-webkit-scrollbar-track { background: #f1f5f9; }
+        body.light-mode ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+        body.light-mode ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Navbar */
         body.light-mode nav {
             background-color: #ffffff !important;
             border-bottom-color: #e2e8f0 !important;
         }
+        body.light-mode nav h1 {
+            /* Mantém gradiente ou ajusta se necessário, mas o texto base muda */
+        }
+        body.light-mode nav #auth-container button {
+            color: #475569;
+        }
+        body.light-mode nav #auth-container button:hover {
+            color: #0f172a;
+        }
+        body.light-mode nav #btn-login {
+            background-color: #f1f5f9 !important;
+            color: #1e293b !important;
+            border-color: #cbd5e1 !important;
+        }
+        
+        /* List Items */
+        body.light-mode .bg-slate-800 {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+        }
+        body.light-mode .divide-slate-700 > :not([hidden]) ~ :not([hidden]) {
+            border-color: #e2e8f0 !important;
+        }
+
+        /* Fix Preset Buttons Text in Light Mode (keep them readable on colored bg) */
+        body.light-mode .preset-btn .text-white { color: #ffffff !important; } /* Mantém branco nos botões coloridos */
+        body.light-mode .preset-btn .text-red-300 { color: #fca5a5 !important; }
+        body.light-mode .preset-btn .text-slate-300 { color: #cbd5e1 !important; }
+        body.light-mode .preset-btn .text-emerald-300 { color: #6ee7b7 !important; }
+        body.light-mode button[class*="bg-cyan"] { color: #ffffff !important; } /* Botões primários mantêm texto branco */
+        body.light-mode button[class*="bg-red"] { color: #ffffff !important; } /* Botões perigo mantêm texto branco */
+        body.light-mode button[class*="bg-green"] { color: #ffffff !important; } 
+        body.light-mode .bg-green-700\/30 { background-color: #dcfce7 !important; border-color: #86efac !important; color: #15803d !important; }
+        body.light-mode .bg-cyan-900\/30 { background-color: #cffafe !important; border-color: #67e8f9 !important; color: #0e7490 !important; }
+        body.light-mode .bg-red-900\/30 { background-color: #fee2e2 !important; border-color: #fca5a5 !important; color: #b91c1c !important; }
+
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center pb-10">
@@ -80,7 +147,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-dna text-cyan-500 text-xl"></i>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.4.2</span></h1>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">MacroMixer <span class="text-xs text-gray-500 font-normal ml-1">v3.4.3</span></h1>
             </div>
             <div id="auth-container" class="text-xs flex items-center gap-3">
                 <button id="theme-toggle" class="text-slate-400 hover:text-white transition-colors" title="Alternar tema">
@@ -109,17 +176,42 @@
             </div>
 
             <!-- Dr Carlos Presets -->
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="applyPreset('A')" class="preset-btn bg-gradient-to-br from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 border border-red-500/30 rounded-lg p-3 text-left group">
-                    <div class="text-xs text-red-300 uppercase font-bold tracking-widest mb-1">Pré-Set A</div>
-                    <div class="text-white font-bold text-sm"><i class="fa-solid fa-fire mr-1"></i> MASSACRE</div>
-                    <div class="text-[10px] text-red-200 mt-1">Perna/Costas (High Carb)</div>
-                </button>
-                <button onclick="applyPreset('B')" class="preset-btn bg-gradient-to-br from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 border border-blue-500/30 rounded-lg p-3 text-left group">
-                    <div class="text-xs text-blue-300 uppercase font-bold tracking-widest mb-1">Pré-Set B</div>
-                    <div class="text-white font-bold text-sm"><i class="fa-solid fa-snowflake mr-1"></i> VÁCUO</div>
-                    <div class="text-[10px] text-blue-200 mt-1">Ombro/Braço (Low Carb)</div>
-                </button>
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <!-- Preset A: MASSACRE -->
+                <div class="relative group">
+                    <button onclick="applyPreset('A')" class="preset-btn w-full h-full bg-gradient-to-br from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 border border-red-500/30 rounded-lg p-2 text-left transition-all shadow-lg hover:shadow-red-900/50">
+                        <div class="text-[10px] text-red-300 uppercase font-bold tracking-widest mb-1">Pré-Set A</div>
+                        <div class="text-white font-bold text-xs sm:text-sm"><i class="fa-solid fa-fire mr-1"></i> MASSACRE</div>
+                        <div class="text-[9px] text-red-200 mt-1 leading-tight">High Carb/Treino</div>
+                    </button>
+                    <button onclick="savePreset('A', event)" class="absolute top-1 right-1 text-red-300 hover:text-white bg-red-900/50 hover:bg-red-900 rounded p-1 transition-all opacity-70 hover:opacity-100" title="Salvar neste preset">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Preset C: PESSOAL (Novo) -->
+                <div class="relative group">
+                    <button onclick="applyPreset('C')" class="preset-btn w-full h-full bg-gradient-to-br from-emerald-800 to-emerald-600 hover:from-emerald-700 hover:to-emerald-500 border border-emerald-500/30 rounded-lg p-2 text-left transition-all shadow-lg hover:shadow-emerald-900/50">
+                        <div class="text-[10px] text-emerald-300 uppercase font-bold tracking-widest mb-1">Pré-Set C</div>
+                        <div class="text-white font-bold text-xs sm:text-sm"><i class="fa-solid fa-user mr-1"></i> PESSOAL</div>
+                        <div class="text-[9px] text-emerald-100 mt-1 leading-tight">Minha Rotina</div>
+                    </button>
+                    <button onclick="savePreset('C', event)" class="absolute top-1 right-1 text-emerald-300 hover:text-white bg-emerald-900/50 hover:bg-emerald-900 rounded p-1 transition-all opacity-70 hover:opacity-100" title="Salvar neste preset">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Preset B: VÁCUO -->
+                <div class="relative group">
+                    <button onclick="applyPreset('B')" class="preset-btn w-full h-full bg-gradient-to-br from-slate-800 to-slate-600 hover:from-slate-700 hover:to-slate-500 border border-slate-500/30 rounded-lg p-2 text-left transition-all shadow-lg hover:shadow-slate-900/50">
+                        <div class="text-[10px] text-slate-300 uppercase font-bold tracking-widest mb-1">Pré-Set B</div>
+                        <div class="text-white font-bold text-xs sm:text-sm"><i class="fa-solid fa-wind mr-1"></i> VÁCUO</div>
+                        <div class="text-[9px] text-slate-200 mt-1 leading-tight">Low Carb/Descanso</div>
+                    </button>
+                    <button onclick="savePreset('B', event)" class="absolute top-1 right-1 text-slate-300 hover:text-white bg-slate-900/50 hover:bg-slate-900 rounded p-1 transition-all opacity-70 hover:opacity-100" title="Salvar neste preset">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                    </button>
+                </div>
             </div>
 
             <form id="goals-form" class="space-y-4">
@@ -178,23 +270,18 @@
              <!-- Background Grid Effect -->
              <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#64748b 1px, transparent 1px); background-size: 20px 20px;"></div>
 
-             <button id="edit-goals-btn" class="absolute top-3 right-3 text-slate-500 hover:text-cyan-400 text-xs uppercase font-bold tracking-wider z-10">
-                <i class="fa-solid fa-gear mr-1"></i> Setup
-            </button>
-            
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
                     <h2 class="text-cyan-500 text-xs uppercase font-bold tracking-widest">Painel de Controle</h2>
                 </div>
-                <div class="flex items-center gap-2 text-[10px]">
+                <div class="flex items-center gap-3 text-[10px] z-10">
                     <span id="sync-status" class="text-green-500">
                         <i class="fa-solid fa-circle-check"></i> Salvo
                     </span>
-                    <span class="text-slate-600">|</span>
-                    <span class="text-slate-400">
-                        <i class="fa-solid fa-hard-drive"></i> Modo Offline
-                    </span>
+                    <button id="edit-goals-btn" class="text-slate-500 hover:text-cyan-400 text-xs uppercase font-bold tracking-wider">
+                        <i class="fa-solid fa-gear mr-1"></i> Setup
+                    </button>
                 </div>
             </div>
 
@@ -238,6 +325,17 @@
                     </div>
                     <div class="text-sm font-bold mt-2 text-white"><span id="display-fat">0</span>g</div>
                     <div class="text-[10px] text-slate-500">/<span id="target-fat">0</span></div>
+                </div>
+            </div>
+
+            <!-- Dr. Carlos Bot (Moved inside Panel) -->
+            <div id="suggestion-box" class="hidden mt-4 bg-slate-900/50 border-l-4 border-cyan-500 p-3 rounded-lg text-sm text-gray-300 relative z-10 backdrop-blur-sm">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-user-doctor text-cyan-400 text-lg mt-1"></i> 
+                    <div>
+                        <span class="block text-xs text-cyan-500 font-bold uppercase mb-1">Dr. Carlos Bot</span>
+                        <span id="suggestion-text">Analisando dados...</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -432,8 +530,8 @@
             </div>
         </section>
 
-        <!-- Achievements/Badges -->
-        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-yellow-500">
+        <!-- Achievements/Badges (Hidden but active for notifications) -->
+        <section class="glass-panel rounded-xl p-4 shadow-lg border-l-4 border-yellow-500 hidden">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-trophy text-yellow-400 text-lg"></i>
@@ -447,16 +545,7 @@
             </div>
         </section>
 
-        <!-- Suggestion Box (Dynamic) -->
-        <div id="suggestion-box" class="hidden bg-slate-800 border-l-4 border-cyan-500 p-4 rounded text-sm text-gray-300 shadow-lg">
-            <div class="flex items-start gap-3">
-                <i class="fa-solid fa-user-doctor text-cyan-400 text-lg mt-1"></i> 
-                <div>
-                    <span class="block text-xs text-cyan-500 font-bold uppercase mb-1">Dr. Carlos Bot</span>
-                    <span id="suggestion-text">Analisando dados...</span>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Share Modal -->
         <div id="share-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -1005,18 +1094,72 @@
 
         // --- PRESETS DR CARLOS ---
         window.applyPreset = (type) => {
-            const presets = {
-                'A': { cals: 2100, prot: 240, carb: 180, fat: 45 }, // Massacre
-                'B': { cals: 1750, prot: 260, carb: 60, fat: 55 }  // Vacuo
+            // Tenta carregar do localStorage, senão usa padrão
+            let presets = loadFromLocalStorage('presets');
+            
+            if (!presets) {
+                presets = {
+                    'A': { cals: 2100, prot: 240, carb: 180, fat: 45 }, // Massacre (Padrão)
+                    'B': { cals: 1750, prot: 260, carb: 60, fat: 55 }, // Vacuo (Padrão)
+                    'C': { cals: 2000, prot: 160, carb: 200, fat: 60 } // Pessoal (Padrão)
+                };
+            }
+            
+            // Garante compatibilidade
+            if (!presets['C']) {
+                presets['C'] = { cals: 2000, prot: 160, carb: 200, fat: 60 };
+            }
+
+            const p = presets[type];
+            if (p) {
+                document.getElementById('goal-cals').value = p.cals;
+                document.getElementById('goal-prot').value = p.prot;
+                document.getElementById('goal-carb').value = p.carb;
+                document.getElementById('goal-fat').value = p.fat;
+                
+                // Feedback visual
+                const btn = event?.currentTarget;
+                if(btn) {
+                    btn.classList.add('ring-2', 'ring-white');
+                    setTimeout(() => btn.classList.remove('ring-2', 'ring-white'), 300);
+                }
+                
+                // Feedback toast
+                const names = {'A': 'MASSACRE', 'B': 'VÁCUO', 'C': 'PESSOAL'};
+                // Opcional: mostrar algum aviso
+            }
+        };
+        
+        window.savePreset = (type, e) => {
+            e.stopPropagation(); // Evita acionar o applyPreset
+            
+            const names = {'A': 'MASSACRE', 'B': 'VÁCUO', 'C': 'PESSOAL'};
+            const name = names[type] || type;
+
+            if (!confirm(`Deseja salvar os valores ATUAIS do formulário como Pré-Set ${type} (${name})?`)) {
+                return;
+            }
+            
+            const cals = Number(document.getElementById('goal-cals').value);
+            const prot = Number(document.getElementById('goal-prot').value);
+            const carb = Number(document.getElementById('goal-carb').value);
+            const fat = Number(document.getElementById('goal-fat').value);
+            
+            if (!cals || !prot || !carb || !fat) {
+                alert('⚠️ Preencha todos os campos de macros e calorias antes de salvar o preset.');
+                return;
+            }
+            
+            let presets = loadFromLocalStorage('presets') || {
+                'A': { cals: 2100, prot: 240, carb: 180, fat: 45 },
+                'B': { cals: 1750, prot: 260, carb: 60, fat: 55 },
+                'C': { cals: 2000, prot: 160, carb: 200, fat: 60 }
             };
             
-            const p = presets[type];
-            document.getElementById('goal-cals').value = p.cals;
-            document.getElementById('goal-prot').value = p.prot;
-            document.getElementById('goal-carb').value = p.carb;
-            document.getElementById('goal-fat').value = p.fat;
+            presets[type] = { cals, prot, carb, fat };
+            saveToLocalStorage('presets', presets);
             
-            alert(`Preset ${type === 'A' ? 'MASSACRE' : 'VÁCUO'} carregado. Clique em salvar.`);
+            alert(`✅ Pré-Set ${type} (${name}) atualizado com sucesso!`);
         };
 
         // --- LOCAL STORAGE FUNCTIONS ---
@@ -1058,22 +1201,42 @@
                 if (!dailyLog.water) dailyLog.water = 0;
                 if (!dailyLog.items) dailyLog.items = [];
                 
+                let dataChanged = false;
+                
                 // Garante compatibilidade: adiciona campos cals/prot/carb/fat aos items antigos
                 dailyLog.items = dailyLog.items.map(item => {
-                    if (!item.cals && item.totals) {
-                        return {
-                            ...item,
-                            cals: item.totals.kcal || 0,
-                            prot: item.totals.p || 0,
-                            carb: item.totals.c || 0,
-                            fat: item.totals.f || 0
-                        };
+                    let newItem = { ...item };
+                    let changed = false;
+                    
+                    if (newItem.cals === undefined && newItem.totals) {
+                        newItem.cals = newItem.totals.kcal || 0;
+                        changed = true;
                     }
-                    return item;
+                    if (newItem.prot === undefined && newItem.totals) {
+                        newItem.prot = newItem.totals.p || 0;
+                        changed = true;
+                    }
+                    if (newItem.carb === undefined && newItem.totals) {
+                        newItem.carb = newItem.totals.c || 0;
+                        changed = true;
+                    }
+                    if (newItem.fat === undefined && newItem.totals) {
+                        newItem.fat = newItem.totals.f || 0;
+                        changed = true;
+                    }
+                    
+                    if (changed) dataChanged = true;
+                    return newItem;
                 });
                 
                 // Recalcula totais para garantir consistência
                 recalculateTotals();
+                
+                // Se houve migração de dados, salva a versão corrigida
+                if (dataChanged) {
+                    console.log('💾 Salvando dados corrigidos/migrados...');
+                    saveDailyLogLocal();
+                }
             } else {
                 dailyLog = { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }, water: 0 };
             }
@@ -1848,10 +2011,17 @@
             dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
             for (const item of dailyLog.items) {
                 console.log('   Somando item:', item.name, {cals: item.cals, prot: item.prot, carb: item.carb, fat: item.fat});
-                dailyLog.total.cals += item.cals || 0;
-                dailyLog.total.prot += item.prot || 0;
-                dailyLog.total.carb += item.carb || 0;
-                dailyLog.total.fat += item.fat || 0;
+                
+                // Robustez: tenta usar propriedades diretas, depois totals, depois 0
+                const iCals = item.cals ?? item.totals?.kcal ?? 0;
+                const iProt = item.prot ?? item.totals?.p ?? 0;
+                const iCarb = item.carb ?? item.totals?.c ?? 0;
+                const iFat = item.fat ?? item.totals?.f ?? 0;
+                
+                dailyLog.total.cals += iCals;
+                dailyLog.total.prot += iProt;
+                dailyLog.total.carb += iCarb;
+                dailyLog.total.fat += iFat;
             }
             
             console.log('   Total calculado:', dailyLog.total);
