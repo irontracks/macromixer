@@ -1835,25 +1835,41 @@
             document.getElementById('target-fat').innerText = userSettings.fat;
         }
 
-        const updateDashboard = throttle(function() {
+        // Removido throttle para garantir atualização imediata e evitar problemas de timing no iOS
+        function updateDashboard() {
+            // Safety check: se totais estão zerados mas existem items, força recálculo
+            if ((!dailyLog.total || dailyLog.total.cals === 0) && dailyLog.items && dailyLog.items.length > 0) {
+                console.log('⚠️ Totais zerados mas há itens. Forçando recálculo...');
+                recalculateTotals();
+            }
+
             const t = dailyLog.total || { cals: 0, prot: 0, carb: 0, fat: 0 };
             const g = userSettings;
             
             console.log('📊 updateDashboard chamado:', t);
             
-            document.getElementById('display-cals').innerText = t.cals || 0;
-            document.getElementById('display-prot').innerText = t.prot || 0;
-            document.getElementById('display-carb').innerText = t.carb || 0;
-            document.getElementById('display-fat').innerText = t.fat || 0;
+            // Verificações de existência de elementos para evitar erros
+            const elCals = document.getElementById('display-cals');
+            if (elCals) elCals.innerText = Math.round(t.cals || 0);
+            
+            const elProt = document.getElementById('display-prot');
+            if (elProt) elProt.innerText = Math.round(t.prot || 0);
+            
+            const elCarb = document.getElementById('display-carb');
+            if (elCarb) elCarb.innerText = Math.round(t.carb || 0);
+            
+            const elFat = document.getElementById('display-fat');
+            if (elFat) elFat.innerText = Math.round(t.fat || 0);
 
             const balance = g.cals - (t.cals || 0);
-            document.getElementById('saldo-cals').innerText = `BUFFER: ${balance}`;
+            const elSaldo = document.getElementById('saldo-cals');
+            if (elSaldo) elSaldo.innerText = `BUFFER: ${Math.round(balance)}`;
             
             setBar('bar-cals', t.cals || 0, g.cals);
             setBar('bar-prot', t.prot || 0, g.prot);
             setBar('bar-carb', t.carb || 0, g.carb);
             setBar('bar-fat', t.fat || 0, g.fat);
-        }, 100); // Throttle de 100ms
+        }
 
         function setBar(id, val, max) {
             const pct = Math.min(100, Math.max(0, (val / max) * 100));
@@ -2021,18 +2037,17 @@
         function recalculateTotals() {
             console.log('🔄 recalculateTotals chamado');
             console.log('   Items antes:', dailyLog.items.length);
-            console.log('   Items:', dailyLog.items);
             
             dailyLog.total = { cals: 0, prot: 0, carb: 0, fat: 0 };
             for (const item of dailyLog.items) {
                 if (!item) continue;
-                console.log('   Somando item:', item.name, {cals: item.cals, prot: item.prot, carb: item.carb, fat: item.fat});
                 
                 // Robustez: tenta usar propriedades diretas, depois totals, depois 0
-                const iCals = item.cals ?? item.totals?.kcal ?? 0;
-                const iProt = item.prot ?? item.totals?.p ?? 0;
-                const iCarb = item.carb ?? item.totals?.c ?? 0;
-                const iFat = item.fat ?? item.totals?.f ?? 0;
+                // Garante que são números para evitar concatenação de strings ou NaN
+                const iCals = parseFloat(item.cals ?? item.totals?.kcal ?? 0) || 0;
+                const iProt = parseFloat(item.prot ?? item.totals?.p ?? 0) || 0;
+                const iCarb = parseFloat(item.carb ?? item.totals?.c ?? 0) || 0;
+                const iFat = parseFloat(item.fat ?? item.totals?.f ?? 0) || 0;
                 
                 dailyLog.total.cals += iCals;
                 dailyLog.total.prot += iProt;
