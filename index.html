@@ -1197,11 +1197,14 @@
         };
 
         // --- LOCAL STORAGE FUNCTIONS ---
+        // Funções para manipulação do LocalStorage (Armazenamento Local)
         function saveToLocalStorage(key, data) {
+            // Salva dados no navegador com uma chave prefixada para evitar conflitos
             localStorage.setItem(`macromixer_${key}`, JSON.stringify(data));
         }
 
         function loadFromLocalStorage(key, defaultValue = null) {
+            // Recupera dados do navegador ou retorna o valor padrão se não existir
             const data = localStorage.getItem(`macromixer_${key}`);
             return data ? JSON.parse(data) : defaultValue;
         }
