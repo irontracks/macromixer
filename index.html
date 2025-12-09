@@ -3519,119 +3519,124 @@
 
         // --- RELATÓRIO PDF DIÁRIO ---
         async function generateDailyReport() {
-            // 1. Prepare Data
-            const today = new Date();
-            const dateStr = today.toLocaleDateString('pt-BR');
-            const totals = dailyLog.total;
-            const goals = userSettings;
-            
-            // Get Phrase
-            let phrase = "";
-            const existingPhrase = document.getElementById('suggestion-text')?.innerText;
-            if (existingPhrase) {
-                phrase = existingPhrase;
-            } else {
-                phrase = "Mantenha o foco nos seus objetivos!";
-            }
-            
-            // 2. Build HTML for PDF
-            const template = document.getElementById('pdf-template');
-            if (!template) {
-                console.error('PDF Template not found');
-                return;
-            }
-            
-            // Clear previous
-            template.innerHTML = '';
-            
-            // Header
-            const header = `
-                <div class="text-center mb-6 border-b pb-4 border-gray-200">
-                    <h1 class="text-3xl font-bold text-slate-800">MacroMixer - Relatório Diário</h1>
-                    <p class="text-slate-500 text-sm mt-1">${dateStr}</p>
-                    <p class="text-slate-500 text-xs">Dr. Carlos Edition</p>
-                </div>
-            `;
-            
-            // Dr Carlos Section
-            const feedback = `
-                <div class="mb-6 bg-slate-50 p-4 rounded-lg border-l-4 border-blue-500">
-                    <h3 class="font-bold text-slate-700 mb-2">Análise do Dr. Carlos:</h3>
-                    <p class="italic text-slate-600">"${phrase}"</p>
-                </div>
-            `;
-            
-            // Totals vs Goals
-            const stats = `
-                <div class="grid grid-cols-4 gap-4 mb-6 text-center">
-                    <div class="p-3 bg-slate-100 rounded">
-                        <div class="text-xs text-slate-500 uppercase">Calorias</div>
-                        <div class="font-bold text-xl text-purple-600">${Math.round(totals.cals)}</div>
-                        <div class="text-xs text-slate-400">Meta: ${goals.cals}</div>
-                    </div>
-                    <div class="p-3 bg-slate-100 rounded">
-                        <div class="text-xs text-slate-500 uppercase">Proteína</div>
-                        <div class="font-bold text-xl text-green-600">${Math.round(totals.prot)}g</div>
-                        <div class="text-xs text-slate-400">Meta: ${goals.prot}g</div>
-                    </div>
-                    <div class="p-3 bg-slate-100 rounded">
-                        <div class="text-xs text-slate-500 uppercase">Carbo</div>
-                        <div class="font-bold text-xl text-yellow-600">${Math.round(totals.carb)}g</div>
-                        <div class="text-xs text-slate-400">Meta: ${goals.carb}g</div>
-                    </div>
-                    <div class="p-3 bg-slate-100 rounded">
-                        <div class="text-xs text-slate-500 uppercase">Gordura</div>
-                        <div class="font-bold text-xl text-red-600">${Math.round(totals.fat)}g</div>
-                        <div class="text-xs text-slate-400">Meta: ${goals.fat}g</div>
-                    </div>
-                </div>
-            `;
-            
-            // Meals List
-            let mealsHtml = '<div class="space-y-2">';
-            if (dailyLog.items && dailyLog.items.length > 0) {
-                // Sort chronologically for report
-                const sortedItems = [...dailyLog.items].sort((a, b) => {
-                     return a.time.localeCompare(b.time);
-                });
-
-                sortedItems.forEach((item, index) => {
-                    mealsHtml += `
-                        <div class="flex justify-between items-center py-2 border-b border-gray-100 text-sm">
-                            <div class="flex-1">
-                                <span class="font-bold text-slate-700">${item.time}</span>
-                                <span class="ml-2 text-slate-600">${item.name}</span>
-                            </div>
-                            <div class="flex gap-3 text-xs text-slate-500">
-                                <span>${Math.round(item.totals?.kcal || 0)} kcal</span>
-                                <span>P: ${Math.round(item.totals?.p || 0)}g</span>
-                                <span>C: ${Math.round(item.totals?.c || 0)}g</span>
-                                <span>G: ${Math.round(item.totals?.f || 0)}g</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                mealsHtml += '<p class="text-center text-slate-400 italic py-4">Nenhuma refeição registrada hoje.</p>';
-            }
-            mealsHtml += '</div>';
-            
-            const content = `
-                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 mb-3 border-b pb-2">Refeições do Dia</h3>
-                    ${mealsHtml}
-                </div>
-            `;
-            
-            template.innerHTML = header + feedback + stats + content;
-            template.classList.remove('hidden'); // Show temporarily for rendering
-            
-            // 3. Generate PDF
+            console.log("Iniciando geração de relatório diário...");
             try {
+                // 1. Prepare Data with Safety Checks
+                const today = new Date();
+                const dateStr = today.toLocaleDateString('pt-BR');
+                
+                // Safety checks for global variables
+                const totals = (dailyLog && dailyLog.total) ? dailyLog.total : { cals: 0, prot: 0, carb: 0, fat: 0 };
+                const goals = userSettings || { cals: 2000, prot: 150, carb: 200, fat: 60 };
+                const items = (dailyLog && dailyLog.items) ? dailyLog.items : [];
+                
+                // Get Phrase
+                let phrase = "Mantenha o foco nos seus objetivos!";
+                const suggestionEl = document.getElementById('suggestion-text');
+                if (suggestionEl && suggestionEl.innerText) {
+                    phrase = suggestionEl.innerText;
+                }
+                
+                // 2. Build HTML for PDF
+                const template = document.getElementById('pdf-template');
+                if (!template) {
+                    console.error('PDF Template element not found in DOM');
+                    alert('Erro interno: Template de PDF não encontrado.');
+                    return;
+                }
+                
+                // Clear previous
+                template.innerHTML = '';
+                
+                // Header
+                const header = `
+                    <div class="text-center mb-6 border-b pb-4 border-gray-200">
+                        <h1 class="text-3xl font-bold text-slate-800">MacroMixer - Relatório Diário</h1>
+                        <p class="text-slate-500 text-sm mt-1">${dateStr}</p>
+                        <p class="text-slate-500 text-xs">Dr. Carlos Edition</p>
+                    </div>
+                `;
+                
+                // Dr Carlos Section
+                const feedback = `
+                    <div class="mb-6 bg-slate-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <h3 class="font-bold text-slate-700 mb-2">Análise do Dr. Carlos:</h3>
+                        <p class="italic text-slate-600">"${phrase}"</p>
+                    </div>
+                `;
+                
+                // Totals vs Goals
+                const stats = `
+                    <div class="grid grid-cols-4 gap-4 mb-6 text-center">
+                        <div class="p-3 bg-slate-100 rounded">
+                            <div class="text-xs text-slate-500 uppercase">Calorias</div>
+                            <div class="font-bold text-xl text-purple-600">${Math.round(totals.cals || 0)}</div>
+                            <div class="text-xs text-slate-400">Meta: ${goals.cals || 0}</div>
+                        </div>
+                        <div class="p-3 bg-slate-100 rounded">
+                            <div class="text-xs text-slate-500 uppercase">Proteína</div>
+                            <div class="font-bold text-xl text-green-600">${Math.round(totals.prot || 0)}g</div>
+                            <div class="text-xs text-slate-400">Meta: ${goals.prot || 0}g</div>
+                        </div>
+                        <div class="p-3 bg-slate-100 rounded">
+                            <div class="text-xs text-slate-500 uppercase">Carbo</div>
+                            <div class="font-bold text-xl text-yellow-600">${Math.round(totals.carb || 0)}g</div>
+                            <div class="text-xs text-slate-400">Meta: ${goals.carb || 0}g</div>
+                        </div>
+                        <div class="p-3 bg-slate-100 rounded">
+                            <div class="text-xs text-slate-500 uppercase">Gordura</div>
+                            <div class="font-bold text-xl text-red-600">${Math.round(totals.fat || 0)}g</div>
+                            <div class="text-xs text-slate-400">Meta: ${goals.fat || 0}g</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Meals List
+                let mealsHtml = '<div class="space-y-2">';
+                if (items.length > 0) {
+                    // Sort chronologically for report
+                    const sortedItems = [...items].sort((a, b) => {
+                         return (a.time || '').localeCompare(b.time || '');
+                    });
+
+                    sortedItems.forEach((item, index) => {
+                        const itemTotals = item.totals || { kcal: 0, p: 0, c: 0, f: 0 };
+                        mealsHtml += `
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 text-sm">
+                                <div class="flex-1">
+                                    <span class="font-bold text-slate-700">${item.time || '--:--'}</span>
+                                    <span class="ml-2 text-slate-600">${item.name || 'Item sem nome'}</span>
+                                </div>
+                                <div class="flex gap-3 text-xs text-slate-500">
+                                    <span>${Math.round(itemTotals.kcal || 0)} kcal</span>
+                                    <span>P: ${Math.round(itemTotals.p || 0)}g</span>
+                                    <span>C: ${Math.round(itemTotals.c || 0)}g</span>
+                                    <span>G: ${Math.round(itemTotals.f || 0)}g</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    mealsHtml += '<p class="text-center text-slate-400 italic py-4">Nenhuma refeição registrada hoje.</p>';
+                }
+                mealsHtml += '</div>';
+                
+                const content = `
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="font-bold text-slate-800 mb-3 border-b pb-2">Refeições do Dia</h3>
+                        ${mealsHtml}
+                    </div>
+                `;
+                
+                template.innerHTML = header + feedback + stats + content;
+                template.classList.remove('hidden'); // Show temporarily for rendering
+                
+                // 3. Generate PDF
                 // Ensure jsPDF is available
                 if (!window.jspdf) {
-                    throw new Error("jsPDF library not loaded");
+                    throw new Error("Biblioteca jsPDF não carregada.");
                 }
+                
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF({
                     orientation: 'p',
@@ -3640,6 +3645,10 @@
                 });
                 
                 // Use html2canvas to render the template
+                if (!window.html2canvas) {
+                     throw new Error("Biblioteca html2canvas não carregada.");
+                }
+
                 const canvas = await html2canvas(template, {
                     scale: 2, // Better quality
                     useCORS: true,
@@ -3670,10 +3679,11 @@
                 alert('✅ Relatório PDF gerado com sucesso!');
                 
             } catch (error) {
-                console.error('Erro ao gerar PDF:', error);
-                alert('Erro ao gerar PDF: ' + error.message);
+                console.error('Erro CRÍTICO ao gerar PDF:', error);
+                alert('Erro ao gerar PDF: ' + (error.message || error));
             } finally {
-                template.classList.add('hidden'); // Hide again
+                const template = document.getElementById('pdf-template');
+                if (template) template.classList.add('hidden'); // Hide again
             }
         }
 
