@@ -267,6 +267,9 @@
                 <button type="button" id="clear-cache-btn" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-2 rounded transition-all uppercase tracking-wider text-xs mt-2">
                     <i class="fa-solid fa-trash-can mr-1"></i> Limpar Cache & Atualizar
                 </button>
+                <button type="button" onclick="debugApp()" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 rounded transition-all uppercase tracking-wider text-xs mt-2">
+                    <i class="fa-solid fa-bug mr-1"></i> Debug Info
+                </button>
             </form>
         </section>
 
@@ -1197,8 +1200,16 @@
             updateDashboard();
         }
 
+        // --- DATE HELPERS ---
+        function getLocalISODate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         function loadDailyLogLocal() {
-            const dateStr = currentViewDate.toISOString().split('T')[0];
+            const dateStr = getLocalISODate(currentViewDate);
             const saved = loadFromLocalStorage(`log_${dateStr}`);
             if (saved) {
                 dailyLog = saved;
@@ -1255,7 +1266,7 @@
         }
 
         function saveDailyLogLocal() {
-            const dateStr = currentViewDate.toISOString().split('T')[0];
+            const dateStr = getLocalISODate(currentViewDate);
             saveToLocalStorage(`log_${dateStr}`, dailyLog);
         }
 
@@ -1266,7 +1277,7 @@
             for (let i = 6; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = getLocalISODate(date);
                 const saved = loadFromLocalStorage(`log_${dateStr}`);
                 
                 if (saved) {
@@ -1405,7 +1416,7 @@
                 return;
             }
             
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = getLocalISODate(currentViewDate);
             const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
             
             console.log('📥 loadDailyLog: Carregando do Firebase para', todayStr);
@@ -1527,7 +1538,7 @@
             dailyLog.total = newTotal;
             
             // SEMPRE salva no localStorage PRIMEIRO (prioridade)
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = getLocalISODate(new Date());
             console.log('💾 Salvando no localStorage (PRIORIDADE)...');
             saveToLocalStorage(`log_${todayStr}`, dailyLog);
             console.log('✅ Salvo no localStorage com sucesso!');
@@ -1572,7 +1583,7 @@
             if (!currentUser) return;
             if(!confirm("Limpar todo o histórico de hoje?")) return;
             
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = getLocalISODate(new Date());
             const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
             await setDoc(docRef, { items: [], total: { cals: 0, prot: 0, carb: 0, fat: 0 }});
         }
@@ -1894,14 +1905,14 @@
             console.log('💧 dailyLog.water:', dailyLog.water);
             
             if (!currentUser || useLocalStorage) {
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = getLocalISODate(new Date());
                 localStorage.setItem('macromixer_water_' + todayStr, dailyLog.water.toString());
                 console.log('✅ Água salva no localStorage:', todayStr, dailyLog.water);
                 return;
             }
             
             try {
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = getLocalISODate(new Date());
                 const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
                 
                 console.log('🔥 Salvando no Firebase:', todayStr, dailyLog.water);
@@ -1911,7 +1922,7 @@
             } catch (error) {
                 console.error('❌ Erro ao salvar água no Firebase:', error);
                 // Fallback para localStorage se falhar
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = getLocalISODate(new Date());
                 localStorage.setItem('macromixer_water_' + todayStr, dailyLog.water.toString());
                 console.log('✅ Água salva no localStorage (fallback):', todayStr, dailyLog.water);
             }
@@ -1949,7 +1960,7 @@
                 // Calcula data de ontem
                 const yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                const yesterdayStr = getLocalISODate(yesterday);
                 
                 let yesterdayLog;
                 
@@ -1987,11 +1998,10 @@
                 recalculateTotals();
                 
                 // Salva
+                const todayStr = getLocalISODate(new Date());
                 if (!currentUser || useLocalStorage) {
-                    const todayStr = new Date().toISOString().split('T')[0];
                     localStorage.setItem('macromixer_log_' + todayStr, JSON.stringify(dailyLog));
                 } else {
-                    const todayStr = new Date().toISOString().split('T')[0];
                     const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
                     await setDoc(docRef, dailyLog);
                 }
@@ -2068,7 +2078,7 @@
                 return;
             }
             
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalISODate(new Date());
             const entry = { date: today, weight: weight };
             
             // Salva no Firebase ou localStorage
@@ -2673,7 +2683,7 @@
             // Salva no Firebase/localStorage
             if (currentUser && !useLocalStorage) {
                 try {
-                    const todayStr = new Date().toISOString().split('T')[0];
+                    const todayStr = getLocalISODate(new Date());
                     const docRef = doc(db, 'users', currentUser.uid, 'daily_logs', todayStr);
                     await setDoc(docRef, { 
                         items: dailyLog.items, 
@@ -2755,6 +2765,27 @@
                  txt.innerHTML = getRandom(phrases.onTrack);
                  box.className = "bg-slate-800/50 border-l-4 border-cyan-500 p-3 rounded text-sm text-gray-300";
             }
+        }
+
+        // --- DEBUG FUNCTION ---
+        window.debugApp = function() {
+            const today = new Date();
+            const iso = getLocalISODate(today);
+            const lsKey = `macromixer_log_${iso}`;
+            const lsData = localStorage.getItem(lsKey);
+            
+            const info = `
+            === DEBUG INFO ===
+            User Agent: ${navigator.userAgent}
+            Time: ${today.toLocaleTimeString()}
+            Local ISO: ${iso}
+            LS Key: ${lsKey}
+            LS Data Length: ${lsData ? lsData.length : 'NULL'}
+            Items: ${dailyLog.items.length}
+            Total: ${JSON.stringify(dailyLog.total)}
+            `;
+            alert(info);
+            console.log(info);
         }
 
         // --- MULTI-DAY HISTORY FUNCTIONS ---
@@ -3024,7 +3055,7 @@
             // Parabeniza se bateu a meta
             if (t.cals >= g.cals * 0.95 && t.cals <= g.cals * 1.05 && t.prot >= g.prot * 0.95) {
                 const lastCongrats = localStorage.getItem('macromixer_last_congrats');
-                const today = new Date().toISOString().split('T')[0];
+                const today = getLocalISODate(new Date());
                 
                 if (lastCongrats !== today) {
                     showNotification('🎉 Parabéns!', 'Você bateu suas metas de hoje! Continue assim!');
@@ -3124,7 +3155,7 @@
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `macromixer_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.setAttribute('download', `macromixer_export_${getLocalISODate(new Date())}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -3144,7 +3175,7 @@
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `macromixer_export_${new Date().toISOString().split('T')[0]}.json`);
+            link.setAttribute('download', `macromixer_export_${getLocalISODate(new Date())}.json`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -3434,7 +3465,7 @@
                 });
                 
                 const link = document.createElement('a');
-                link.download = `macromixer_report_${new Date().toISOString().split('T')[0]}.png`;
+                link.download = `macromixer_report_${getLocalISODate(new Date())}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 
@@ -3472,7 +3503,7 @@
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
                 
                 pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-                pdf.save(`macromixer_report_${new Date().toISOString().split('T')[0]}.pdf`);
+                pdf.save(`macromixer_report_${getLocalISODate(new Date())}.pdf`);
                 
                 alert('✅ PDF salvo com sucesso!');
             } catch (error) {
@@ -3632,7 +3663,7 @@
             let currentDate = new Date();
             
             for (let i = 0; i < 365; i++) {
-                const dateStr = currentDate.toISOString().split('T')[0];
+                const dateStr = getLocalISODate(currentDate);
                 const log = loadFromLocalStorage('log_' + dateStr);
                 
                 if (log && log.items && log.items.length > 0) {
