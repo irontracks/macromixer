@@ -793,8 +793,12 @@
     // Corn Flakes / Cereal de Milho (Sem Açúcar)
     "corn flakes": { c: 85.0, p: 7.0, f: 1.0, kcal: 380, unit: "Corn Flakes (Sem Açúcar) - 40g (1 xícara)", approx: { xicara: 40, colher: 5 } },
     "cornflakes": { c: 85.0, p: 7.0, f: 1.0, kcal: 380, unit: "Corn Flakes (Sem Açúcar) - 40g (1 xícara)", approx: { xicara: 40, colher: 5 } },
+    "corn flakers": { c: 85.0, p: 7.0, f: 1.0, kcal: 380, unit: "Corn Flakes (Sem Açúcar) - 40g (1 xícara)", approx: { xicara: 40, colher: 5 } },
     "cereal de milho": { c: 85.0, p: 7.0, f: 1.0, kcal: 380, unit: "Corn Flakes (Sem Açúcar) - 40g (1 xícara)", approx: { xicara: 40, colher: 5 } },
+    "cereal milho": { c: 85.0, p: 7.0, f: 1.0, kcal: 380, unit: "Corn Flakes (Sem Açúcar) - 40g (1 xícara)", approx: { xicara: 40, colher: 5 } },
     "cereal de milho natural": { c: 85.0, p: 7.0, f: 1.0, kcal: 380, unit: "Corn Flakes (Sem Açúcar) - 40g (1 xícara)", approx: { xicara: 40, colher: 5 } },
+    "cereal": { c: 85.0, p: 7.0, f: 1.0, kcal: 380, unit: "Corn Flakes (Sem Açúcar) - 40g (1 xícara)", approx: { xicara: 40, colher: 5 } },
+    "sucrilhos": { c: 85.0, p: 7.0, f: 1.0, kcal: 380, unit: "Corn Flakes (Sem Açúcar) - 40g (1 xícara)", approx: { xicara: 40, colher: 5 } },
     
     // Tubérculos
     "batata": { c: 20.1, p: 1.7, f: 0.1, kcal: 86, unit: "Batata Inglesa (Cozida) - 100g", approx: { colher: 30, unidade: 150 } },
@@ -4209,6 +4213,11 @@
         setInterval(checkMealReminders, 60000);
         
         initAuth();
+
+        // --- EXPOSE FUNCTIONS TO WINDOW (Fix for Module Scope) ---
+        window.generateDailyReport = generateDailyReport;
+        window.exportAsImage = exportAsImage;
+        window.debugApp = debugApp;
         
         // Register Service Worker (PWA) with forced update
         if ('serviceWorker' in navigator) {
